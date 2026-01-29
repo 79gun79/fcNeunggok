@@ -6,7 +6,7 @@
 
 🔗 [전지훈련 바로가기](https://keen-mochi-fef8ff.netlify.app/)
 
-<img width="372" height="72" alt="전지훈련 공식 배경" src=/fcNeunggok.png" />
+<img width="372" height="72" alt="전지훈련 공식 배경" src="/fcNeunggok.png" />
 
 </div>
 
