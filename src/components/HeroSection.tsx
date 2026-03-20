@@ -1,179 +1,180 @@
-import { Button } from "@/components/ui/button";
-import { ArrowDown, Sparkles } from "lucide-react";
+import { motion } from 'motion/react';
+import { useEffect, useMemo, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { ArrowRight, ArrowUp, User2 } from 'lucide-react';
 
 const HeroSection = () => {
+  const [isVideoReady, setIsVideoReady] = useState(false);
+
+  const markVideoReady = useMemo(() => {
+    let alreadyMarked = false;
+    return () => {
+      if (alreadyMarked) return;
+      alreadyMarked = true;
+      setIsVideoReady(true);
+    };
+  }, []);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      markVideoReady();
+    }, 4500);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [markVideoReady]);
+
   return (
     <section
       id="top"
-      className="relative overflow-hidden px-3 pb-10 pt-8 sm:px-6 sm:pb-14 sm:pt-12 lg:px-8"
+      className="relative isolate min-h-[calc(100vh-3.5rem)] overflow-hidden px-3 pb-16 sm:min-h-[calc(100vh-4rem)] sm:px-6 sm:pb-20 lg:px-8"
     >
-      <div className="absolute inset-x-0 top-0 -z-10 h-[30rem] bg-[radial-gradient(circle_at_top,_rgba(137,97,61,0.18),_transparent_55%)] sm:h-[36rem]" />
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,0.7),transparent_40%)]" />
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        <video
+          className={cn(
+            'h-full w-full object-cover transition-opacity duration-700',
+            isVideoReady ? 'opacity-100' : 'opacity-0',
+          )}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          onLoadedData={markVideoReady}
+          onCanPlay={markVideoReady}
+          onError={markVideoReady}
+        >
+          <source src="/soccer.mp4" type="video/mp4" />
+        </video>
+      </div>
 
-      <div className="container mx-auto">
-        <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-          <div className="space-y-6">
-            <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-primary/15 bg-white/70 px-3 py-2 text-[10px] font-medium tracking-[0.18em] text-primary/80 shadow-sm backdrop-blur sm:px-4 sm:text-xs">
-              <Sparkles className="h-4 w-4" />
-              MEMBERS ONLY COMMUNITY
-            </div>
-
-            <div className="space-y-4">
-              <h1 className="max-w-3xl text-4xl font-bold leading-[1.05] tracking-tight text-foreground sm:text-6xl lg:text-7xl">
-                변화의 속도만큼 빠르게
-                <span className="text-gradient"> 기록을 정리하세요</span>
-              </h1>
-              <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-lg sm:leading-7">
-                FC 능곡의 일상과 전지훈련, 함께한 장면들을 한 곳에 모아보는 전용
-                커뮤니티입니다. 구글 로그인으로 참여하고, 사진을 업로드하며 기록을
-                이어가세요.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Button
-                asChild
-                className="h-11 rounded-full bg-foreground px-6 text-background shadow-lg shadow-foreground/10 hover:bg-foreground/90"
-              >
-                <a href="#gallery">Learn more</a>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                className="h-11 rounded-full border-border/70 bg-white/70 px-6 text-foreground shadow-sm backdrop-blur hover:bg-white"
-              >
-                <a href="#gallery">Request a demo</a>
-              </Button>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
-              <div className="rounded-2xl border border-white/60 bg-white/70 p-3 shadow-sm backdrop-blur sm:p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                  Archive
-                </p>
-                <p className="mt-2 text-lg font-semibold text-foreground sm:mt-3 sm:text-2xl">
-                  Photo Log
-                </p>
-              </div>
-              <div className="rounded-2xl border border-white/60 bg-white/70 p-3 shadow-sm backdrop-blur sm:p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                  Access
-                </p>
-                <p className="mt-2 text-lg font-semibold text-foreground sm:mt-3 sm:text-2xl">
-                  Google Sign-In
-                </p>
-              </div>
-              <div className="rounded-2xl border border-white/60 bg-white/70 p-3 shadow-sm backdrop-blur sm:p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                  Mood
-                </p>
-                <p className="mt-2 text-lg font-semibold text-foreground sm:mt-3 sm:text-2xl">
-                  Premium Brown
-                </p>
-              </div>
-            </div>
+      <div
+        className={cn(
+          'absolute inset-0 z-30 flex items-center justify-center transition-opacity duration-500',
+          isVideoReady ? 'pointer-events-none opacity-0' : 'opacity-100',
+        )}
+        role="status"
+        aria-live="polite"
+        aria-label="Hero video loading"
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.14),transparent_44%),linear-gradient(180deg,rgba(2,6,23,0.98)_0%,rgba(2,6,23,0.92)_60%,rgba(0,0,0,0.98)_100%)]" />
+        <div className="relative flex flex-col items-center gap-4 text-center">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/20 border-t-white/80" />
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-white/90">영상 로딩 중…</p>
+            <p className="text-xs text-white/55">잠시만 기다려 주세요</p>
           </div>
-
-          <div className="relative">
-            <div className="absolute -inset-6 -z-10 rounded-[2.5rem] bg-[radial-gradient(circle_at_top_right,rgba(137,97,61,0.22),transparent_55%)]" />
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="luxury-panel overflow-hidden rounded-[1.5rem] p-4 shadow-[0_24px_60px_-28px_rgba(86,57,32,0.45)] sm:rounded-[2rem]">
-                <p className="text-xs font-semibold tracking-wide text-muted-foreground">
-                  Report Preview
-                </p>
-                <div className="mt-4 grid grid-cols-2 gap-4">
-                  <div className="rounded-2xl border border-border/60 bg-white/70 p-3">
-                    <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                      Responses
-                    </p>
-                    <p className="mt-2 text-2xl font-semibold text-foreground">25</p>
-                  </div>
-                  <div className="rounded-2xl border border-border/60 bg-white/70 p-3">
-                    <p className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                      Moments
-                    </p>
-                    <p className="mt-2 text-2xl font-semibold text-foreground">08</p>
-                  </div>
-                </div>
-                <div className="mt-4 overflow-hidden rounded-2xl border border-border/60">
-                  <div className="h-24 bg-[linear-gradient(90deg,rgba(137,97,61,0.18),rgba(137,97,61,0.06))]" />
-                </div>
-              </div>
-
-              <div className="relative overflow-hidden rounded-[1.5rem] border border-white/40 bg-[linear-gradient(160deg,rgba(86,57,32,0.95),rgba(137,97,61,0.92))] p-4 text-white shadow-[0_24px_60px_-28px_rgba(86,57,32,0.55)] sm:rounded-[2rem]">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.18),_transparent_32%)]" />
-                <div className="relative space-y-3">
-                  <p className="text-xs font-semibold tracking-wide text-white/80">
-                    Community Highlights
-                  </p>
-                  <div className="overflow-hidden rounded-[1.15rem] border border-white/15 bg-black/10">
-                    <img
-                      src="/ng_main.png"
-                      alt="FC 능곡 커뮤니티 대표 이미지"
-                      className="h-[170px] w-full object-cover sm:h-[200px]"
-                    />
-                  </div>
-                  <div className="grid gap-3">
-                    <div className="rounded-2xl border border-white/15 bg-white/10 p-3 backdrop-blur-sm">
-                      <p className="text-[10px] uppercase tracking-[0.22em] text-white/70">
-                        Curation
-                      </p>
-                      <p className="mt-2 text-sm font-semibold">
-                        소중한 장면을 오래 남기는 공간
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="relative overflow-hidden rounded-[1.5rem] border border-white/40 bg-white/70 p-4 shadow-[0_18px_45px_-26px_rgba(86,57,32,0.35)] backdrop-blur sm:col-span-2 sm:rounded-[2rem]">
-                <div className="grid gap-4 sm:grid-cols-[0.55fr_0.45fr] sm:items-center">
-                  <div className="overflow-hidden rounded-[1.25rem] border border-border/60">
-                    <img
-                      src="/img3.png"
-                      alt="최근 업로드 사진"
-                      className="h-[170px] w-full object-cover sm:h-[190px]"
-                    />
-                  </div>
-                  <div className="space-y-3">
-                    <p className="text-xs font-semibold tracking-wide text-muted-foreground">
-                      Unmoderated story
-                    </p>
-                    <div className="space-y-2">
-                      <p className="text-sm font-semibold text-foreground sm:text-base">
-                        오늘의 훈련은 어땠나요?
-                      </p>
-                      <p className="text-sm leading-6 text-muted-foreground">
-                        사진 한 장과 짧은 설명으로, 팀의 순간을 빠르게 기록하세요.
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className="h-2 w-2 rounded-full bg-primary/70" />
-                      <span className="h-2 w-2 rounded-full bg-primary/40" />
-                      <span className="h-2 w-2 rounded-full bg-primary/25" />
-                      <span className="h-2 w-2 rounded-full bg-primary/15" />
-                      <span className="ml-2 text-xs text-muted-foreground">
-                        Noted by members
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-10 flex justify-center sm:mt-12">
-          <a
-            href="#gallery"
-            className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-white/70 px-4 py-2 text-xs font-medium text-muted-foreground shadow-sm backdrop-blur transition-colors hover:bg-white"
-          >
-            Scroll to continue
-            <ArrowDown className="h-4 w-4" />
-          </a>
         </div>
       </div>
+
+      {isVideoReady && (
+        <>
+          <div className="absolute inset-0 z-10 bg-[linear-gradient(180deg,rgba(17,24,39,0.12)_0%,rgba(17,24,39,0.34)_45%,rgba(10,10,10,0.68)_100%)]" />
+          <div className="absolute inset-0 z-10 bg-[radial-gradient(circle_at_top,rgba(96,165,250,0.18),transparent_30%),radial-gradient(circle_at_80%_18%,rgba(255,255,255,0.12),transparent_24%),radial-gradient(circle_at_bottom,rgba(120,53,15,0.14),transparent_34%)]" />
+          <div className="absolute inset-x-0 bottom-0 z-10 h-40 bg-[linear-gradient(180deg,transparent,rgba(0,0,0,0.35))] sm:h-52" />
+
+          <div className="container relative z-20 mx-auto">
+            <div className="mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-4xl flex-col items-center justify-center text-center sm:min-h-[calc(100vh-4rem)]">
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.55 }}
+                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-2 text-[10px] font-medium tracking-[0.18em] text-white/85 shadow-sm backdrop-blur-md sm:px-4 sm:text-xs"
+              >
+                <User2 className="h-4 w-4" />
+                ONLY NEUNGGOK MEMBERS
+              </motion.div>
+
+              <motion.h1
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.05 }}
+                className="mt-6 text-5xl font-semibold leading-[0.98] tracking-tight text-white sm:text-7xl lg:text-[5.5rem]"
+              >
+                FC NEUNGGOK
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.12 }}
+                className="mt-5 max-w-2xl !text-sm leading-6 !text-white/80 sm:!text-base sm:leading-7"
+              >
+                능곡인들을 위한 전용 커뮤니티로, 함께한 순간을 포착합니다.
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.18 }}
+                className="mt-7"
+              >
+                <Button
+                  asChild
+                  className="h-11 rounded-full bg-white px-6 text-foreground shadow-lg shadow-black/20 hover:bg-white/90"
+                >
+                  <a href="#gallery" className="inline-flex items-center gap-2">
+                    With bro
+                    <ArrowRight className="h-4 w-4" />
+                  </a>
+                </Button>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.24 }}
+                className="mt-10 w-full max-w-2xl"
+              >
+                <div className="flex items-center justify-between gap-3 rounded-full border border-white/15 bg-white/10 px-4 py-3 shadow-[0_20px_40px_-24px_rgba(0,0,0,0.6)] backdrop-blur-xl sm:px-5 sm:py-4">
+                  <span className="!text-sm !text-white/70 sm:!text-base">
+                    해당 기능은 준비 예정입니다.
+                  </span>
+                  <a
+                    href="#gallery"
+                    aria-label="Go to gallery"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white shadow-md shadow-black/20 transition-colors hover:bg-white/30"
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                  </a>
+                </div>
+                <p className="mt-4 text-xs text-white/60 sm:text-sm">
+                  To be continued...
+                </p>
+              </motion.div>
+            </div>
+
+            <motion.a
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.8 }}
+              className="absolute bottom-8 left-1/2 -translate-x-1/2 sm:bottom-12"
+              href="#gallery"
+              aria-label="Scroll to gallery"
+            >
+              <motion.div
+                animate={{ y: [0, 10, 0] }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                }}
+                className="flex h-10 w-6 items-start justify-center rounded-full border-2 border-white/30 bg-white/10 p-2 backdrop-blur-md sm:h-12 sm:w-8"
+              >
+                <motion.div
+                  animate={{ y: [0, 12, 0] }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  }}
+                  className="h-2 w-1 rounded-full bg-white/60 sm:h-3 sm:w-1.5"
+                />
+              </motion.div>
+            </motion.a>
+          </div>
+        </>
+      )}
     </section>
   );
 };

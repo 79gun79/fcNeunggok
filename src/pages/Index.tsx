@@ -23,8 +23,8 @@ const Index = () => {
         <meta name="twitter:image" content="/ng_main.png" />
       </Helmet>
 
+      <HomeHeader />
       <main className="min-h-screen overflow-hidden bg-background">
-        <HomeHeader />
         <HeroSection />
         <GallerySection />
         <FooterSection />
