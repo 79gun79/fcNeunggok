@@ -4,63 +4,64 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 215 30% 15%;
+    --background: 32 33% 96%;
+    --foreground: 28 31% 16%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 215 30% 15%;
+    --card: 30 40% 99%;
+    --card-foreground: 28 31% 16%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 30% 15%;
+    --popover: 30 40% 99%;
+    --popover-foreground: 28 31% 16%;
 
-    --primary: 210 80% 45%;
+    --primary: 31 46% 23%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 35 90% 55%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 32 39% 39%;
+    --secondary-foreground: 32 33% 96%;
 
-    --muted: 210 30% 92%;
-    --muted-foreground: 215 20% 45%;
+    --muted: 34 28% 90%;
+    --muted-foreground: 30 18% 38%;
 
-    --accent: 195 70% 85%;
-    --accent-foreground: 215 30% 15%;
+    --accent: 36 42% 88%;
+    --accent-foreground: 28 31% 16%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 210 30% 88%;
-    --input: 210 30% 88%;
-    --ring: 210 80% 45%;
+    --border: 32 26% 82%;
+    --input: 32 26% 82%;
+    --ring: 32 39% 39%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
     /* Custom tokens */
-    --snow: 210 30% 98%;
-    --ice: 195 60% 92%;
-    --mountain: 215 40% 25%;
-    --sunset: 25 95% 60%;
-    --forest: 150 30% 35%;
+    --snow: 30 36% 98%;
+    --ice: 36 32% 92%;
+    --mountain: 28 27% 22%;
+    --sunset: 32 55% 50%;
+    --forest: 31 46% 23%;
 
     /* Gradients */
     --gradient-hero: linear-gradient(
-      180deg,
-      hsl(210 50% 20% / 0.3) 0%,
-      hsl(210 50% 10% / 0.7) 100%
+      135deg,
+      hsl(31 46% 23% / 0.96) 0%,
+      hsl(32 39% 39% / 0.92) 52%,
+      hsl(33 44% 63% / 0.85) 100%
     );
     --gradient-sky: linear-gradient(
       180deg,
-      hsl(200 70% 75%) 0%,
-      hsl(210 60% 90%) 100%
+      hsl(31 41% 97%) 0%,
+      hsl(33 45% 91%) 100%
     );
     --gradient-card: linear-gradient(
       145deg,
-      hsl(0 0% 100%) 0%,
-      hsl(210 30% 97%) 100%
+      hsl(30 43% 99%) 0%,
+      hsl(34 36% 94%) 100%
     );
 
     /* Shadows */
-    --shadow-soft: 0 4px 20px -4px hsl(210 50% 20% / 0.15);
-    --shadow-glow: 0 0 40px hsl(210 80% 45% / 0.2);
+    --shadow-soft: 0 20px 60px -28px hsl(31 46% 23% / 0.28);
+    --shadow-glow: 0 0 48px hsl(32 39% 39% / 0.16);
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -145,6 +146,11 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: "Pretendard", sans-serif;
+    background-image:
+      radial-gradient(circle at top left, hsl(32 46% 84% / 0.32), transparent 28%),
+      radial-gradient(circle at top right, hsl(31 32% 72% / 0.22), transparent 24%),
+      linear-gradient(180deg, hsl(var(--background)) 0%, hsl(34 30% 93%) 100%);
+    min-height: 100vh;
   }
 
   h1,
@@ -160,6 +166,12 @@
 @layer components {
   .glass-card {
     @apply bg-card/80 backdrop-blur-md border border-border/50;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .luxury-panel {
+    background: linear-gradient(145deg, hsl(30 44% 99% / 0.94), hsl(35 34% 93% / 0.88));
+    @apply border border-border/60 backdrop-blur-xl;
     box-shadow: var(--shadow-soft);
   }
 
@@ -256,4 +268,8 @@
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
+}
+
+body::selection {
+  background: hsl(var(--primary) / 0.18);
 }

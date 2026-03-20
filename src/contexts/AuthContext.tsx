@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -46,7 +47,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signInWithGoogle = async () => {
-    const redirectTo = import.meta.env.VITE_REDIRECT_URL || window.location.origin;
+    // localhost에서 실행 중이면(DEV/PROD 상관없이) 로컬로 돌아오도록 최우선 처리합니다.
+    // Supabase Redirect URLs에도 해당 origin(예: http://localhost:8080)을 반드시 등록해야 합니다.
+    const isLocalhost =
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1";
+
+    const redirectTo = isLocalhost
+      ? (import.meta.env.VITE_DEV_REDIRECT_URL || window.location.origin)
+      : (import.meta.env.VITE_REDIRECT_URL || window.location.origin);
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',

@@ -60,8 +60,10 @@ CREATE POLICY "Photos are viewable by everyone"
 ```env
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key-here
-# 선택사항: 커스텀 리다이렉트 URL (기본값: 현재 도메인)
-# VITE_REDIRECT_URL=http://localhost:3000
+# 선택사항: 배포 환경 리다이렉트 URL
+# VITE_REDIRECT_URL=https://your-site-name.netlify.app
+# 선택사항: 로컬 개발 전용 리다이렉트 URL (기본값: 현재 origin)
+# VITE_DEV_REDIRECT_URL=http://localhost:5173
 ```
 
 ### Supabase API 키 확인 방법
@@ -90,12 +92,15 @@ VITE_SUPABASE_ANON_KEY=your-anon-key-here
 1. Supabase 대시보드에서 Authentication > Settings 메뉴로 이동합니다.
 2. "Site URL"을 배포된 사이트 URL로 설정합니다 (예: https://your-site-name.netlify.app).
 3. "Redirect URLs"에 다음 URL들을 추가합니다:
-   - 로컬 개발: `http://localhost:3000`
+  - 로컬 개발: `http://localhost:5173`
+  - 로컬 개발(대체): `http://127.0.0.1:5173`
+  - 커스텀 포트를 쓴다면 해당 포트도 추가 (예: `http://localhost:8080`)
    - 배포 환경: `https://your-site-name.netlify.app`
 
 ### 환경별 설정
 
-- **로컬 개발**: `VITE_REDIRECT_URL`을 설정하지 않거나 `http://localhost:3000`으로 설정
+- **로컬 개발**: `VITE_REDIRECT_URL`을 설정하지 않는 것을 권장합니다.
+  - 필요 시 `VITE_DEV_REDIRECT_URL=http://localhost:5173` 사용
 - **배포 환경**: `VITE_REDIRECT_URL`을 실제 배포 URL로 설정
 
 ### 배포 플랫폼별 환경변수 설정 예시

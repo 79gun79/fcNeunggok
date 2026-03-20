@@ -30,8 +30,13 @@ const AuthButton: React.FC = () => {
 
   if (loading) {
     return (
-      <Button variant="outline" size="sm" disabled>
-        <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin mr-2" />
+      <Button
+        variant="outline"
+        size="sm"
+        disabled
+        className="w-full rounded-full border-primary/20 bg-white/70 px-4 text-foreground sm:w-auto sm:px-5"
+      >
+        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
         로딩 중...
       </Button>
     );
@@ -39,8 +44,13 @@ const AuthButton: React.FC = () => {
 
   if (!user) {
     return (
-      <Button onClick={handleSignIn} variant="outline" size="sm">
-        <LogIn className="w-4 h-4 mr-2" />
+      <Button
+        onClick={handleSignIn}
+        variant="outline"
+        size="sm"
+        className="w-full rounded-full border-primary/15 bg-white/75 px-4 text-foreground shadow-sm backdrop-blur hover:bg-primary hover:text-primary-foreground sm:w-auto sm:px-5"
+      >
+        <LogIn className="mr-2 h-4 w-4" />
         구글 로그인
       </Button>
     );
@@ -49,25 +59,29 @@ const AuthButton: React.FC = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex w-full items-center justify-center gap-2 rounded-full border-primary/15 bg-white/75 px-3 text-foreground shadow-sm backdrop-blur hover:bg-white sm:w-auto sm:justify-start"
+        >
           <Avatar className="w-6 h-6">
             <AvatarImage src={user.user_metadata?.avatar_url} />
             <AvatarFallback>
               <User className="w-4 h-4" />
             </AvatarFallback>
           </Avatar>
-          <span>
+          <span className="max-w-[8rem] truncate sm:max-w-[10rem]">
             {user.user_metadata?.full_name || user.email?.split('@')[0] || '사용자'}
           </span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        <div className="px-2 py-1.5 text-sm text-gray-600">
+      <DropdownMenuContent align="end" className="w-[min(14rem,calc(100vw-1.5rem))] rounded-2xl border-border/70 bg-white/95 p-2 shadow-xl sm:w-56">
+        <div className="px-2 py-2 text-sm text-muted-foreground">
           {user.email}
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
-          <LogOut className="w-4 h-4 mr-2" />
+        <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer rounded-xl">
+          <LogOut className="mr-2 h-4 w-4" />
           로그아웃
         </DropdownMenuItem>
       </DropdownMenuContent>

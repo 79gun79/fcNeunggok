@@ -1,9 +1,11 @@
-import { useScrollReveal } from "@/hooks/useScrollReveal";
-import { Camera, Plus, Upload, X, Trash2 } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState, useRef } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Camera, Plus, Trash2, Upload, X } from "lucide-react";
 import { fetchPhotos, uploadPhoto, deletePhoto } from "@/api/photos";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState, useRef } from "react";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
+import { useToast } from "@/hooks/use-toast";
+import { Photo } from "@/types/photo";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -25,8 +27,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import { Photo } from "@/types/photo";
 
 const GallerySection = () => {
   const { ref, isVisible } = useScrollReveal(0.1);
@@ -46,7 +46,7 @@ const GallerySection = () => {
   const { data: photos = [], isLoading } = useQuery({
     queryKey: ["photos"],
     queryFn: fetchPhotos,
-    staleTime: 5 * 60 * 1000, // 5분간 캐시 유지
+    staleTime: 5 * 60 * 1000,
   });
 
   const uploadMutation = useMutation({
@@ -119,8 +119,7 @@ const GallerySection = () => {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
+      setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
@@ -159,43 +158,74 @@ const GallerySection = () => {
     resetForm();
   };
 
+  const photoCountLabel = `${photos.length.toString().padStart(2, "0")} Photos`;
+
   return (
-    <section ref={ref} className="py-20 bg-gradient-to-b from-sky-50 to-white">
-      <div className="container mx-auto px-4">
+    <section
+      id="gallery"
+      ref={ref}
+      className="scroll-mt-24 px-3 py-14 sm:px-6 sm:py-20 lg:px-8"
+    >
+      <div className="container mx-auto">
         <div
-          className={`text-center mb-12 transition-all duration-700 ${
+          className={`luxury-panel mb-8 rounded-[1.5rem] p-4 sm:mb-10 sm:rounded-[2rem] sm:p-8 transition-all duration-700 ${
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}
         >
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Camera className="w-6 h-6 text-sky-600" />
-            <span className="text-sky-600 font-medium tracking-wide">
-              Gallery
-            </span>
+          <div className="mb-4 flex flex-col items-start gap-3 sm:mb-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
+            <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-primary/15 bg-white/70 px-3 py-2 text-xs font-medium tracking-wide text-primary/80 sm:px-4 sm:text-sm">
+              <Camera className="h-4 w-4" />
+              Community Gallery
+            </div>
+            <div className="rounded-full border border-border/70 bg-white/80 px-3 py-2 text-xs text-muted-foreground sm:px-4 sm:text-sm">
+              {photoCountLabel}
+            </div>
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold text-slate-800 mb-4">
-            전지 훈련 갤러리
-          </h2>
-          <p className="text-slate-600 max-w-2xl mx-auto">
-            자기 전에 생각 많이 날꺼야~
-          </p>
+
+          <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
+            <div>
+              <h2 className="mb-3 text-3xl font-bold text-foreground sm:mb-4 sm:text-4xl md:text-5xl">
+                FC 능곡의 기록을 모아보는
+                <span className="text-gradient"> 프리미엄 포토 아카이브</span>
+              </h2>
+              <p className="max-w-3xl text-sm leading-6 text-muted-foreground sm:text-lg sm:leading-7">
+                팀의 순간을 차분한 브라운 톤의 갤러리로 정리했습니다. 로그인한
+                멤버는 새로운 사진을 업로드하고, 자신이 올린 기록을 직접 관리할 수
+                있습니다.
+              </p>
+            </div>
+            <div className="w-full rounded-2xl border border-primary/15 bg-primary px-4 py-3 text-xs leading-5 text-primary-foreground shadow-lg shadow-primary/20 sm:px-5 sm:py-4 sm:text-sm">
+              {user
+                ? "지금 이 순간도 새로운 기록으로 남겨보세요."
+                : "로그인 후 업로드와 삭제 기능을 사용할 수 있습니다."}
+            </div>
+          </div>
         </div>
 
         <div
-          className={`grid grid-cols-2 md:grid-cols-3 gap-4 transition-all duration-700 delay-200 ${
+          className={`grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-3 transition-all duration-700 delay-200 ${
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
           }`}
         >
           {isLoading ? (
-            <div className="col-span-full text-center py-8 text-slate-500">
+            <div className="col-span-full luxury-panel rounded-[1.5rem] py-12 text-center text-sm text-muted-foreground sm:rounded-[1.75rem] sm:py-16 sm:text-base">
               사진을 불러오는 중...
+            </div>
+          ) : photos.length === 0 ? (
+            <div className="col-span-full luxury-panel rounded-[1.5rem] px-5 py-12 text-center sm:rounded-[1.75rem] sm:px-6 sm:py-16">
+              <p className="text-base font-semibold text-foreground sm:text-lg">
+                아직 등록된 사진이 없습니다.
+              </p>
+              <p className="mt-3 text-sm text-muted-foreground sm:text-base">
+                첫 번째 장면을 업로드해 커뮤니티 아카이브를 시작해보세요.
+              </p>
             </div>
           ) : (
             <>
               {photos.map((photo, index) => (
                 <div
                   key={photo.id}
-                  className={`aspect-square rounded-2xl overflow-hidden transition-all duration-500 cursor-pointer ${
+                  className={`group relative aspect-[0.92] cursor-pointer overflow-hidden rounded-[1.35rem] border border-white/40 bg-white/70 shadow-[0_18px_40px_-20px_rgba(86,57,32,0.35)] transition-all duration-500 sm:aspect-[0.95] sm:rounded-[1.75rem] ${
                     isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
                   }`}
                   style={{ transitionDelay: `${300 + index * 100}ms` }}
@@ -204,28 +234,48 @@ const GallerySection = () => {
                   <img
                     src={photo.src}
                     alt={photo.description}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 p-4 text-white sm:p-5">
+                    <p className="max-h-12 overflow-hidden text-base font-semibold leading-6 sm:max-h-14 sm:text-lg sm:leading-7">
+                      {photo.description}
+                    </p>
+                    <div className="mt-2 flex items-center justify-between gap-3 text-xs text-white/80 sm:mt-3 sm:text-sm">
+                      <span className="truncate">
+                        {photo.user_name || "FC 능곡 멤버"}
+                      </span>
+                      {photo.created_at && (
+                        <span>
+                          {new Date(photo.created_at).toLocaleDateString("ko-KR")}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               ))}
 
-              {/* 사진 추가 버튼 - 로그인된 사용자만 표시 */}
               {user && (
                 <Dialog
                   open={isUploadDialogOpen}
                   onOpenChange={setIsUploadDialogOpen}
                 >
                   <DialogTrigger asChild>
-                    <div className="aspect-square rounded-2xl bg-gradient-to-br from-sky-100 to-slate-100 flex flex-col items-center justify-center gap-3 hover:from-sky-200 hover:to-slate-200 transition-colors cursor-pointer group border-2 border-dashed border-sky-200 hover:border-sky-300">
-                      <div className="w-16 h-16 rounded-full bg-white/80 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                        <Plus className="w-8 h-8 text-sky-500" />
+                    <div className="group flex aspect-[0.92] cursor-pointer flex-col items-center justify-center gap-3 rounded-[1.35rem] border border-dashed border-primary/30 bg-[linear-gradient(145deg,rgba(255,250,245,0.92),rgba(229,215,201,0.8))] px-5 text-center transition-all hover:-translate-y-1 hover:border-primary/45 hover:shadow-[0_18px_40px_-20px_rgba(86,57,32,0.35)] sm:aspect-[0.95] sm:gap-4 sm:rounded-[1.75rem] sm:px-6">
+                      <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 shadow-sm transition-transform group-hover:scale-110 sm:h-16 sm:w-16">
+                        <Plus className="h-8 w-8 text-primary" />
                       </div>
-                      <span className="text-sm text-slate-500 font-medium">
-                        사진 추가
-                      </span>
+                      <div>
+                        <span className="block text-sm font-semibold text-foreground sm:text-base">
+                          사진 업로드
+                        </span>
+                        <span className="mt-2 block text-xs leading-5 text-muted-foreground sm:text-sm">
+                          새로운 순간을 아카이브에 추가하세요.
+                        </span>
+                      </div>
                     </div>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-md">
+                  <DialogContent className="max-w-[calc(100vw-1rem)] rounded-[1.25rem] border-border/70 bg-[linear-gradient(160deg,rgba(255,250,245,0.98),rgba(244,236,227,0.98))] p-4 shadow-2xl sm:max-w-md sm:rounded-[1.75rem] sm:p-6">
                     <DialogHeader>
                       <DialogTitle>새 사진 추가</DialogTitle>
                     </DialogHeader>
@@ -238,7 +288,7 @@ const GallerySection = () => {
                           accept="image/*"
                           ref={fileInputRef}
                           onChange={handleFileSelect}
-                          className="mt-1"
+                          className="mt-1 border-border/80 bg-white/80"
                         />
                       </div>
 
@@ -247,12 +297,12 @@ const GallerySection = () => {
                           <img
                             src={previewUrl}
                             alt="미리보기"
-                            className="w-full h-48 object-cover rounded-lg"
+                            className="h-48 w-full rounded-xl object-cover"
                           />
                           <Button
                             variant="destructive"
                             size="sm"
-                            className="absolute top-2 right-2"
+                            className="absolute right-2 top-2"
                             onClick={() => {
                               setSelectedFile(null);
                               setPreviewUrl(null);
@@ -261,7 +311,7 @@ const GallerySection = () => {
                               }
                             }}
                           >
-                            <X className="w-4 h-4" />
+                            <X className="h-4 w-4" />
                           </Button>
                         </div>
                       )}
@@ -273,11 +323,11 @@ const GallerySection = () => {
                           placeholder="사진에 대한 설명을 입력하세요..."
                           value={description}
                           onChange={(e) => setDescription(e.target.value)}
-                          className="mt-1"
+                          className="mt-1 min-h-28 border-border/80 bg-white/80"
                         />
                       </div>
 
-                      <div className="flex gap-2 pt-4">
+                      <div className="flex flex-col gap-2 pt-4 sm:flex-row">
                         <Button
                           onClick={handleDialogClose}
                           variant="outline"
@@ -296,12 +346,12 @@ const GallerySection = () => {
                         >
                           {uploadMutation.isPending ? (
                             <>
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                               업로드 중...
                             </>
                           ) : (
                             <>
-                              <Upload className="w-4 h-4 mr-2" />
+                              <Upload className="mr-2 h-4 w-4" />
                               업로드
                             </>
                           )}
@@ -312,62 +362,54 @@ const GallerySection = () => {
                 </Dialog>
               )}
 
-              {/* 사진 상세 모달 */}
               <Dialog
                 open={isPhotoModalOpen}
                 onOpenChange={setIsPhotoModalOpen}
               >
-                <DialogContent className="sm:max-w-xl rounded-2xl ">
+                <DialogContent className="max-w-[calc(100vw-1rem)] rounded-[1.25rem] border-border/70 bg-[linear-gradient(160deg,rgba(255,250,245,0.98),rgba(244,236,227,0.98))] shadow-2xl sm:max-w-xl sm:rounded-[1.75rem]">
                   <DialogHeader>
                     <DialogTitle>사진 상세</DialogTitle>
                   </DialogHeader>
                   {selectedPhoto && (
-                    <div className="space-y-4 flex flex-col items-center">
-                      <div className="w-full flex justify-center bg-slate-50 rounded-lg overflow-hidden">
+                    <div className="flex flex-col items-center space-y-4">
+                      <div className="flex w-full justify-center overflow-hidden rounded-[1rem] bg-[#f2e8dd] sm:rounded-2xl">
                         <img
                           src={selectedPhoto.src}
                           alt={selectedPhoto.description}
-                          className="max-w-full max-h-[60vh] object-contain"
+                          className="max-h-[60vh] max-w-full object-contain"
                         />
                       </div>
                       <div className="w-full space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground sm:text-sm">
                           <span className="font-medium">작성자:</span>
                           <span>
                             {selectedPhoto.user_name ||
-                              (selectedPhoto.user_id === user?.id
-                                ? "나"
-                                : "알 수 없음")}
+                              (selectedPhoto.user_id === user?.id ? "나" : "알 수 없음")}
                           </span>
                         </div>
-                        <div className="flex items-start gap-2 text-sm">
-                          <span className="font-medium text-gray-600">
+                        <div className="flex items-start gap-2 text-xs sm:text-sm">
+                          <span className="font-medium text-muted-foreground">
                             설명:
                           </span>
-                          <span className="flex-1">
-                            {selectedPhoto.description}
-                          </span>
+                          <span className="flex-1">{selectedPhoto.description}</span>
                         </div>
                         {selectedPhoto.created_at && (
-                          <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground sm:text-sm">
                             <span className="font-medium">업로드 날짜:</span>
                             <span>
-                              {new Date(
-                                selectedPhoto.created_at
-                              ).toLocaleDateString("ko-KR")}
+                              {new Date(selectedPhoto.created_at).toLocaleDateString("ko-KR")}
                             </span>
                           </div>
                         )}
-                        {/* 본인이 올린 사진인 경우 삭제 버튼 표시 */}
                         {user && selectedPhoto.user_id === user.id && (
-                          <div className="pt-2 border-t">
+                          <div className="border-t border-border/70 pt-3">
                             <Button
                               variant="destructive"
                               size="sm"
                               onClick={() => setIsDeleteDialogOpen(true)}
                               className="w-full"
                             >
-                              <Trash2 className="w-4 h-4 mr-2" />
+                              <Trash2 className="mr-2 h-4 w-4" />
                               사진 삭제
                             </Button>
                           </div>
@@ -378,12 +420,11 @@ const GallerySection = () => {
                 </DialogContent>
               </Dialog>
 
-              {/* 삭제 확인 다이얼로그 */}
               <AlertDialog
                 open={isDeleteDialogOpen}
                 onOpenChange={setIsDeleteDialogOpen}
               >
-                <AlertDialogContent>
+                <AlertDialogContent className="max-w-[calc(100vw-1rem)] rounded-[1.25rem] border-border/70 bg-[linear-gradient(160deg,rgba(255,250,245,0.98),rgba(244,236,227,0.98))] shadow-2xl sm:rounded-[1.5rem]">
                   <AlertDialogHeader>
                     <AlertDialogTitle>사진 삭제 확인</AlertDialogTitle>
                     <AlertDialogDescription>
@@ -407,7 +448,7 @@ const GallerySection = () => {
                     >
                       {deleteMutation.isPending ? (
                         <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                          <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                           삭제 중...
                         </>
                       ) : (
@@ -417,23 +458,6 @@ const GallerySection = () => {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-
-              {/* 로그인 안내 메시지 - 로그인하지 않은 사용자에게 표시 */}
-              {/* {!user && (
-                <div className="aspect-square rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 flex flex-col items-center justify-center gap-3 border-2 border-dashed border-gray-300">
-                  <div className="w-16 h-16 rounded-full bg-white/80 flex items-center justify-center shadow-sm">
-                    <Camera className="w-8 h-8 text-gray-400" />
-                  </div>
-                  <div className="text-center">
-                    <span className="text-sm text-gray-500 font-medium block">
-                      사진 추가는
-                    </span>
-                    <span className="text-sm text-gray-500 font-medium block">
-                      로그인 후 가능합니다
-                    </span>
-                  </div>
-                </div>
-              )} */}
             </>
           )}
         </div>
