@@ -1,4 +1,4 @@
-import { Phone, Mail, Instagram } from "lucide-react";
+import { Mail, Instagram } from "lucide-react";
 
 const FooterSection = () => {
   return (
