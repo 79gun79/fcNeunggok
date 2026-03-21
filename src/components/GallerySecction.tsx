@@ -164,36 +164,36 @@ const GallerySection = () => {
     <section
       id="gallery"
       ref={ref}
-      className="relative scroll-mt-24 overflow-hidden px-3 py-14 sm:px-6 sm:py-20 lg:px-8"
+      className="relative scroll-mt-24 overflow-hidden px-3 pb-14 pt-20 sm:px-6 sm:pb-20 sm:pt-24 lg:px-8"
     >
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,#07111f_0%,#0b1728_45%,#101928_100%)]" />
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(96,165,250,0.14),transparent_24%),radial-gradient(circle_at_bottom,rgba(120,53,15,0.12),transparent_30%)]" />
       <div className="container mx-auto">
         <div
-          className={`mb-8 rounded-[1.5rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.76),rgba(15,23,42,0.56))] p-4 shadow-[0_24px_60px_-32px_rgba(0,0,0,0.7)] backdrop-blur-xl transition-all duration-700 sm:mb-10 sm:rounded-[2rem] sm:p-8 ${
+          className={`mb-8 mt-4 transition-all duration-700 sm:mb-10 sm:mt-6 ${
             isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
           }`}
         >
           <div className="mb-4 flex flex-col items-start gap-3 sm:mb-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4">
-            <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-2 !text-xs font-medium tracking-wide !text-white/80 backdrop-blur-md sm:px-4 sm:!text-sm">
+            <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-2 text-xs font-medium tracking-wide text-slate-700 backdrop-blur-md sm:px-4 sm:text-sm">
               <Camera className="h-4 w-4" />
               Gallery
             </div>
-            <div className="rounded-full border border-white/[0.12] bg-white/[0.08] px-3 py-2 !text-xs !text-white/60 backdrop-blur-md sm:px-4 sm:!text-sm">
+            <div className="rounded-full border border-slate-200 bg-white/80 px-3 py-2 text-xs text-slate-500 backdrop-blur-md sm:px-4 sm:text-sm">
               {photoCountLabel}
             </div>
           </div>
 
           <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
             <div>
-              <h2 className="mb-3 !text-3xl font-bold !text-white sm:mb-4 sm:!text-4xl md:!text-5xl">
+              <h2 className="mb-3 text-3xl font-bold text-slate-950 sm:mb-4 sm:text-4xl md:text-5xl">
                 순간 포착
               </h2>
-              <p className="max-w-3xl !text-sm leading-6 !text-white/70 sm:!text-lg sm:leading-7">
+              <p className="max-w-3xl text-sm leading-6 text-slate-600 sm:text-lg sm:leading-7">
                 멤버들의 순간을 함께하세요!
               </p>
             </div>
-            <div className="w-full rounded-2xl border border-white/[0.12] bg-white/[0.08] px-4 py-3 !text-xs leading-5 !text-white/[0.78] shadow-[0_18px_40px_-24px_rgba(0,0,0,0.65)] backdrop-blur-md sm:px-5 sm:py-4 sm:!text-sm">
+            <div className="w-full rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 text-xs leading-5 text-slate-600 shadow-[0_18px_40px_-24px_rgba(15,23,42,0.12)] backdrop-blur-md sm:px-5 sm:py-4 sm:text-sm">
               {user
                 ? '지금 이 순간도 새로운 기록으로 남겨보세요.'
                 : '로그인 후 업로드와 삭제 기능을 사용할 수 있습니다.'}

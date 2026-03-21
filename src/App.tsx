@@ -1,8 +1,11 @@
-import { Toaster } from "@/components/ui/toaster";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { HelmetProvider } from "react-helmet-async";
-import { AuthProvider } from "@/contexts/AuthContext";
-import Index from "./pages/Index";
+import { SonnerToaster } from '@/components/ui/sonner';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { HelmetProvider } from 'react-helmet-async';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import ScrollToTop from '@/components/ScrollToTop';
+import Index from './pages/Index';
+import Gallery from './pages/Gallery';
 
 const queryClient = new QueryClient();
 
@@ -10,8 +13,15 @@ const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Toaster />
-        <Index />
+        <BrowserRouter>
+          <ScrollToTop />
+          <SonnerToaster />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/gallery" element={<Gallery />} />
+            <Route path="*" element={<Index />} />
+          </Routes>
+        </BrowserRouter>
       </AuthProvider>
     </QueryClientProvider>
   </HelmetProvider>
