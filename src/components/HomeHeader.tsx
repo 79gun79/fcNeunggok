@@ -4,13 +4,14 @@ import { ChevronRight, LogIn, LogOut, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation } from 'react-router-dom';
+import { toast as sonnerToast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { label: 'Community', to: '/' },
+  { label: 'Community', to: '/', comingSoon: true },
   { label: 'Gallery', to: '/gallery' },
 ];
 
@@ -27,6 +28,20 @@ const HomeHeader = () => {
     if (location.pathname === to) {
       window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     }
+  };
+
+  const handleNavItemClick = (
+    item: (typeof navItems)[number],
+    event: React.MouseEvent,
+  ) => {
+    if (item.comingSoon) {
+      event.preventDefault();
+      setIsMobileMenuOpen(false);
+      sonnerToast.info('해당 메뉴는 준비 중입니다.');
+      return;
+    }
+
+    handleNavClick(item.to);
   };
 
   useEffect(() => {
@@ -118,7 +133,7 @@ const HomeHeader = () => {
                   <Link
                     key={item.to}
                     to={item.to}
-                    onClick={() => handleNavClick(item.to)}
+                    onClick={(event) => handleNavItemClick(item, event)}
                     className="hover:bg-white/8 group flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-4 transition-colors active:scale-[0.98]"
                   >
                     <span className="text-base font-medium text-white/90 transition-colors group-hover:text-white">
@@ -215,14 +230,14 @@ const HomeHeader = () => {
           </span>
         </Link>
 
-        <div className="flex min-w-0 items-center justify-end gap-2 sm:gap-3">
-          <nav className="hidden items-center gap-1 text-sm text-white/70 md:flex lg:gap-2">
+        <div className="flex min-w-0 items-center justify-end gap-2 sm:gap-3 md:gap-5 lg:gap-6">
+          <nav className="hidden items-center gap-3 text-sm text-white/70 md:flex lg:gap-4">
             {navItems.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
-                onClick={() => handleNavClick(item.to)}
-                className="hover:bg-white/8 inline-flex items-center gap-1 rounded-md px-3 py-2 transition-colors hover:text-white"
+                onClick={(event) => handleNavItemClick(item, event)}
+                className="hover:bg-white/8 inline-flex items-center gap-1 rounded-md px-4 py-2 transition-colors hover:text-white"
               >
                 <span className="font-medium">{item.label}</span>
               </Link>

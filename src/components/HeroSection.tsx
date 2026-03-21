@@ -1,9 +1,9 @@
 import { motion } from 'motion/react';
 import { useEffect, useMemo, useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { ArrowRight, ArrowUp, User2 } from 'lucide-react';
+import { ArrowUp, User2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { toast as sonnerToast } from 'sonner';
 
 const HeroSection = () => {
   const [isVideoReady, setIsVideoReady] = useState(false);
@@ -114,13 +114,16 @@ const HeroSection = () => {
                   <span className="!text-sm !text-white/70 sm:!text-base">
                     해당 기능은 준비 예정입니다.
                   </span>
-                  <Link
-                    to="/gallery"
-                    aria-label="Go to gallery"
+                  <button
+                    type="button"
+                    aria-label="Show coming soon message"
                     className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-white shadow-md shadow-black/20 transition-colors hover:bg-white/30"
+                    onClick={() =>
+                      sonnerToast.info('해당 기능은 준비 예정입니다.')
+                    }
                   >
                     <ArrowUp className="h-4 w-4" />
-                  </Link>
+                  </button>
                 </div>
                 <p className="mt-4 text-xs text-white/60 sm:text-sm">
                   To be continued...
@@ -134,7 +137,7 @@ const HeroSection = () => {
               transition={{ duration: 0.6, delay: 0.8 }}
               className="absolute bottom-8 left-1/2 -translate-x-1/2 sm:bottom-12"
             >
-              <Link to="/gallery" aria-label="Go to gallery">
+              <Link to="/#home" aria-label="Scroll to home section">
                 <motion.div
                   animate={{ y: [0, 10, 0] }}
                   transition={{
