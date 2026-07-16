@@ -6,6 +6,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import ScrollToTop from '@/components/ScrollToTop';
 import Index from './pages/Index';
 import Gallery from './pages/Gallery';
+import Community from './pages/Community';
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/gallery" element={<Gallery />} />
+            <Route path="/community" element={<Community />} />
             <Route path="*" element={<Index />} />
           </Routes>
         </BrowserRouter>

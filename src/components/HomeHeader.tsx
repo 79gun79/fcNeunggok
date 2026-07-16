@@ -11,8 +11,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { label: 'Community', to: '/', comingSoon: true },
-  { label: 'Gallery', to: '/gallery' },
+  { label: 'Community', to: '/community', comingSoon: false },
+  { label: 'Gallery', to: '/gallery', comingSoon: false },
 ];
 
 const HomeHeader = () => {
