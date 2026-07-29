@@ -7,6 +7,7 @@ import ScrollToTop from '@/components/ScrollToTop';
 import Index from './pages/Index';
 import Gallery from './pages/Gallery';
 import Community from './pages/Community';
+import Birthday from './pages/Birthday';
 
 const queryClient = new QueryClient();
 
@@ -21,6 +22,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/gallery" element={<Gallery />} />
             <Route path="/community" element={<Community />} />
+            <Route path="/birthday" element={<Birthday />} />
             <Route path="*" element={<Index />} />
           </Routes>
         </BrowserRouter>
