@@ -1,6 +1,15 @@
-import { Plus, RefreshCcw, Search, SquarePen, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { LogIn, Plus, Search, SquarePen, Trash2, User } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { toast as sonnerToast } from 'sonner';
+import {
+  createPost,
+  deletePost,
+  fetchPosts,
+  getAvatarUrl,
+  getBestDisplayName,
+  updatePost,
+} from '@/api/posts';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   AlertDialog,
@@ -12,6 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -24,80 +34,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-
-type CommunityPost = {
-  id: string;
-  title: string;
-  content: string;
-  author: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-const storageKey = 'fcneunggok:community:posts:v1';
-
-const createId = () => {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID();
-  }
-  return `post_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-};
-
-const nowIso = () => new Date().toISOString();
+import { Post } from '@/types/post';
 
 const safeTrim = (value: string) =>
   value
     .normalize('NFC')
     .replace(/[\u200B-\u200D\uFEFF]/g, '')
     .trim();
-
-const buildSeedPosts = (): CommunityPost[] => {
-  const createdAt = nowIso();
-  return [
-    {
-      id: createId(),
-      title: '공지: FC 능곡 커뮤니티 게시판 오픈(가짜 데이터)',
-      content:
-        '이 게시판은 현재 가짜 데이터로 동작합니다.\n\n- 글쓰기/수정/삭제가 가능해요\n- 새로고침해도 localStorage에 저장됩니다\n\n추후 Supabase로 실제 DB 연동 예정입니다.',
-      author: '운영진',
-      createdAt,
-      updatedAt: createdAt,
-    },
-    {
-      id: createId(),
-      title: '오늘 풋살 인원 체크!',
-      content:
-        '오늘 8시 풋살 참여하실 분 댓글(이라고 치고 글) 남겨주세요.\n\n예) 홍길동 참석',
-      author: '총무',
-      createdAt,
-      updatedAt: createdAt,
-    },
-    {
-      id: createId(),
-      title: '유니폼 사이즈 추천 부탁드립니다',
-      content: '키 175 / 72인데 L 갈까요 M 갈까요?\n경험 공유 부탁!',
-      author: '익명',
-      createdAt,
-      updatedAt: createdAt,
-    },
-  ];
-};
-
-const isCommunityPostArray = (value: unknown): value is CommunityPost[] => {
-  if (!Array.isArray(value)) return false;
-  return value.every((item) => {
-    if (!item || typeof item !== 'object') return false;
-    const post = item as Record<string, unknown>;
-    return (
-      typeof post.id === 'string' &&
-      typeof post.title === 'string' &&
-      typeof post.content === 'string' &&
-      typeof post.author === 'string' &&
-      typeof post.createdAt === 'string' &&
-      typeof post.updatedAt === 'string'
-    );
-  });
-};
 
 const formatDateTime = (iso: string) => {
   try {
@@ -111,76 +54,104 @@ const formatDateTime = (iso: string) => {
   }
 };
 
-const getBestDisplayName = (
-  user?: {
-    email?: string | null;
-    user_metadata?: Record<string, unknown> | null;
-  } | null,
-) => {
-  const meta = user?.user_metadata ?? {};
-  const fromMeta =
-    (typeof meta.full_name === 'string' && meta.full_name) ||
-    (typeof meta.name === 'string' && meta.name);
-  if (fromMeta) return fromMeta;
-  const email = user?.email ?? '';
-  if (email.includes('@')) return email.split('@')[0];
-  return '익명';
-};
+const AuthorAvatar = ({
+  author,
+  avatarUrl,
+  className = 'h-6 w-6',
+}: {
+  author: string;
+  avatarUrl: string | null;
+  className?: string;
+}) => (
+  <Avatar className={`${className} border border-slate-200`}>
+    <AvatarImage src={avatarUrl ?? undefined} alt={author} />
+    <AvatarFallback className="bg-slate-100 text-slate-500">
+      <User className="h-3.5 w-3.5" />
+    </AvatarFallback>
+  </Avatar>
+);
 
 export default function CommunitySection() {
-  const { user } = useAuth();
-  const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const { user, signInWithGoogle } = useAuth();
+  const queryClient = useQueryClient();
+
   const [query, setQuery] = useState('');
-  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
 
   const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [editingPostId, setEditingPostId] = useState<number | null>(null);
   const [draftTitle, setDraftTitle] = useState('');
-  const [draftAuthor, setDraftAuthor] = useState('');
   const [draftContent, setDraftContent] = useState('');
 
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
-  useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(storageKey);
-      if (!saved) {
-        const seeded = buildSeedPosts();
-        setPosts(seeded);
+  const { data: posts = [], isLoading } = useQuery({
+    queryKey: ['posts'],
+    queryFn: fetchPosts,
+    staleTime: 60 * 1000,
+  });
+
+  const invalidatePosts = () =>
+    queryClient.invalidateQueries({ queryKey: ['posts'] });
+
+  const createMutation = useMutation({
+    mutationFn: () =>
+      createPost({
+        title: safeTrim(draftTitle),
+        description: safeTrim(draftContent),
+      }),
+    onSuccess: (result) => {
+      if (!result.success) {
+        sonnerToast.error(result.error ?? '게시글 작성에 실패했습니다.');
         return;
       }
-      const parsed = JSON.parse(saved);
-      if (isCommunityPostArray(parsed)) {
-        const cleaned = parsed
-          .map((post) => ({
-            ...post,
-            title: safeTrim(post.title).slice(0, 120),
-            author: safeTrim(post.author).slice(0, 40) || '익명',
-            content: safeTrim(post.content).slice(0, 5000),
-          }))
-          .filter((post) => post.title.length > 0);
-        setPosts(cleaned);
+      invalidatePosts();
+      setIsEditorOpen(false);
+      sonnerToast.success('게시글을 작성했습니다.');
+    },
+    onError: () => {
+      sonnerToast.error('게시글 작성 중 오류가 발생했습니다.');
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: () =>
+      updatePost(editingPostId as number, {
+        title: safeTrim(draftTitle),
+        description: safeTrim(draftContent),
+      }),
+    onSuccess: (result) => {
+      if (!result.success) {
+        sonnerToast.error(result.error ?? '게시글 수정에 실패했습니다.');
         return;
       }
-      setPosts(buildSeedPosts());
-    } catch {
-      setPosts(buildSeedPosts());
-    }
-  }, []);
+      invalidatePosts();
+      setIsEditorOpen(false);
+      sonnerToast.success('게시글을 수정했습니다.');
+    },
+    onError: () => {
+      sonnerToast.error('게시글 수정 중 오류가 발생했습니다.');
+    },
+  });
 
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(storageKey, JSON.stringify(posts));
-    } catch {
-      // ignore
-    }
-  }, [posts]);
-
-  useEffect(() => {
-    if (!isEditorOpen) return;
-    if (editingPostId) return;
-    setDraftAuthor((current) => safeTrim(current) || getBestDisplayName(user));
-  }, [editingPostId, isEditorOpen, user]);
+  const deleteMutation = useMutation({
+    mutationFn: (postId: number) => deletePost(postId),
+    onSuccess: (result, postId) => {
+      if (!result.success) {
+        sonnerToast.error(result.error ?? '게시글 삭제에 실패했습니다.');
+        return;
+      }
+      invalidatePosts();
+      setDeleteTargetId(null);
+      if (selectedPostId === postId) {
+        setSelectedPostId(null);
+      }
+      sonnerToast.success('게시글을 삭제했습니다.');
+    },
+    onError: () => {
+      sonnerToast.error('게시글 삭제 중 오류가 발생했습니다.');
+    },
+  });
 
   const selectedPost = useMemo(() => {
     if (!selectedPostId) return null;
@@ -189,30 +160,36 @@ export default function CommunitySection() {
 
   const filteredPosts = useMemo(() => {
     const normalizedQuery = safeTrim(query).toLowerCase();
-    const base = [...posts].sort((a, b) =>
-      b.updatedAt.localeCompare(a.updatedAt),
-    );
-    if (!normalizedQuery) return base;
-    return base.filter((post) => {
+    if (!normalizedQuery) return posts;
+    return posts.filter((post) => {
       const haystack =
-        `${post.title}\n${post.content}\n${post.author}`.toLowerCase();
+        `${post.title}\n${post.description}\n${post.author}`.toLowerCase();
       return haystack.includes(normalizedQuery);
     });
   }, [posts, query]);
 
+  const handleSignIn = async () => {
+    const { error } = await signInWithGoogle();
+    if (error) {
+      sonnerToast.error('로그인 중 오류가 발생했습니다.');
+    }
+  };
+
   const openCreate = () => {
+    if (!user) {
+      sonnerToast.info('글쓰기는 로그인 후 이용할 수 있어요.');
+      return;
+    }
     setEditingPostId(null);
     setDraftTitle('');
     setDraftContent('');
-    setDraftAuthor(getBestDisplayName(user));
     setIsEditorOpen(true);
   };
 
-  const openEdit = (post: CommunityPost) => {
+  const openEdit = (post: Post) => {
     setEditingPostId(post.id);
     setDraftTitle(post.title);
-    setDraftContent(post.content);
-    setDraftAuthor(post.author);
+    setDraftContent(post.description);
     setIsEditorOpen(true);
   };
 
@@ -220,10 +197,9 @@ export default function CommunitySection() {
     setIsEditorOpen(false);
   };
 
-  const upsertPostFromDraft = () => {
+  const submitDraft = () => {
     const title = safeTrim(draftTitle);
     const content = safeTrim(draftContent);
-    const author = safeTrim(draftAuthor) || '익명';
 
     if (title.length < 2) {
       sonnerToast.info('제목은 2글자 이상 입력해 주세요.');
@@ -242,62 +218,23 @@ export default function CommunitySection() {
       return;
     }
 
-    const timestamp = nowIso();
-
-    if (!editingPostId) {
-      const createdAt = timestamp;
-      const next: CommunityPost = {
-        id: createId(),
-        title,
-        content,
-        author: author.slice(0, 40),
-        createdAt,
-        updatedAt: createdAt,
-      };
-      setPosts((prev) => [next, ...prev].slice(0, 200));
-      closeEditor();
-      sonnerToast.success('게시글을 작성했습니다.');
-      return;
+    if (editingPostId) {
+      updateMutation.mutate();
+    } else {
+      createMutation.mutate();
     }
-
-    setPosts((prev) =>
-      prev.map((post) => {
-        if (post.id !== editingPostId) return post;
-        return {
-          ...post,
-          title,
-          content,
-          author: author.slice(0, 40),
-          updatedAt: timestamp,
-        };
-      }),
-    );
-    closeEditor();
-    sonnerToast.success('게시글을 수정했습니다.');
   };
 
-  const requestDelete = (postId: string) => {
+  const requestDelete = (postId: number) => {
     setDeleteTargetId(postId);
   };
 
   const confirmDelete = () => {
-    const targetId = deleteTargetId;
-    if (!targetId) return;
-    setPosts((prev) => prev.filter((post) => post.id !== targetId));
-    setDeleteTargetId(null);
-    if (selectedPostId === targetId) {
-      setSelectedPostId(null);
-    }
-    sonnerToast.success('게시글을 삭제했습니다.');
+    if (!deleteTargetId) return;
+    deleteMutation.mutate(deleteTargetId);
   };
 
-  const resetToDummy = () => {
-    const seeded = buildSeedPosts();
-    setPosts(seeded);
-    setSelectedPostId(null);
-    setQuery('');
-    sonnerToast.info('더미 게시글로 초기화했습니다.');
-  };
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   return (
     <section
@@ -314,7 +251,7 @@ export default function CommunitySection() {
               커뮤니티 게시판
             </h2>
             <p className="max-w-2xl text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">
-              더미 데이터로 구성된 게시판입니다.
+              FC 능곡 회원들과 소식을 나눠보세요.
             </p>
           </div>
 
@@ -340,19 +277,21 @@ export default function CommunitySection() {
               </div>
 
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="border-slate-200 bg-white"
-                  onClick={resetToDummy}
-                >
-                  <RefreshCcw className="mr-2 h-4 w-4" />
-                  더미로 초기화
-                </Button>
-                <Button type="button" onClick={openCreate}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  글쓰기
-                </Button>
+                {user ? (
+                  <Button type="button" onClick={openCreate}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    글쓰기
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleSignIn}
+                  >
+                    <LogIn className="mr-2 h-4 w-4" />
+                    로그인하고 글쓰기
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -361,7 +300,11 @@ export default function CommunitySection() {
                 <p className="text-sm font-semibold text-slate-900">게시글</p>
               </div>
 
-              {filteredPosts.length === 0 ? (
+              {isLoading ? (
+                <div className="px-4 py-10 text-center sm:px-5">
+                  <p className="text-sm text-slate-500">불러오는 중...</p>
+                </div>
+              ) : filteredPosts.length === 0 ? (
                 <div className="px-4 py-10 text-center sm:px-5">
                   <p className="text-sm font-medium text-slate-900">
                     표시할 게시글이 없어요.
@@ -372,51 +315,64 @@ export default function CommunitySection() {
                 </div>
               ) : (
                 <ul className="divide-y divide-slate-200">
-                  {filteredPosts.map((post) => (
-                    <li key={post.id} className="px-4 py-4 sm:px-5">
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <button
-                          type="button"
-                          className="text-left"
-                          onClick={() => setSelectedPostId(post.id)}
-                        >
-                          <p className="text-base font-semibold text-slate-950">
-                            {post.title}
-                          </p>
-                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
-                            <span>작성자 {post.author}</span>
-                            <span>·</span>
-                            <span>수정 {formatDateTime(post.updatedAt)}</span>
-                          </div>
-                          <p className="mt-2 line-clamp-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">
-                            {post.content}
-                          </p>
-                        </button>
+                  {filteredPosts.map((post) => {
+                    const canManage = user?.id === post.user_id;
+                    return (
+                      <li key={post.id} className="px-4 py-4 sm:px-5">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                          <button
+                            type="button"
+                            className="text-left"
+                            onClick={() => setSelectedPostId(post.id)}
+                          >
+                            <p className="text-base font-semibold text-slate-950">
+                              {post.title}
+                            </p>
+                            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+                              <span className="flex items-center gap-1.5">
+                                <AuthorAvatar
+                                  author={post.author}
+                                  avatarUrl={post.avatar_url}
+                                />
+                                {post.author}
+                              </span>
+                              <span>·</span>
+                              <span>
+                                {formatDateTime(post.updated_at)} 수정
+                              </span>
+                            </div>
+                            <p className="mt-2 line-clamp-2 whitespace-pre-wrap text-sm leading-6 text-slate-600">
+                              {post.description}
+                            </p>
+                          </button>
 
-                        <div className="flex shrink-0 items-center gap-2 sm:pt-1">
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="border-slate-200 bg-white"
-                            onClick={() => openEdit(post)}
-                          >
-                            <SquarePen className="mr-2 h-4 w-4" />
-                            수정
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => requestDelete(post.id)}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            삭제
-                          </Button>
+                          {canManage && (
+                            <div className="flex shrink-0 items-center gap-2 sm:pt-1">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="border-slate-200 bg-white"
+                                onClick={() => openEdit(post)}
+                              >
+                                <SquarePen className="mr-2 h-4 w-4" />
+                                수정
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => requestDelete(post.id)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                삭제
+                              </Button>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    </li>
-                  ))}
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>
@@ -427,25 +383,23 @@ export default function CommunitySection() {
       <Dialog open={isEditorOpen} onOpenChange={setIsEditorOpen}>
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="mb-2 text-left">
               {editingPostId ? '게시글 수정' : '새 게시글 작성'}
             </DialogTitle>
-            <DialogDescription>
-              더미 게시판입니다. 저장은 이 브라우저에만 반영됩니다.
+            <DialogDescription className="flex items-center gap-1.5">
+              {user && (
+                <>
+                  <AuthorAvatar
+                    author={getBestDisplayName(user)}
+                    avatarUrl={getAvatarUrl(user)}
+                  />
+                  {getBestDisplayName(user)}
+                </>
+              )}
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="community-author">작성자</Label>
-              <Input
-                id="community-author"
-                value={draftAuthor}
-                onChange={(e) => setDraftAuthor(e.target.value)}
-                placeholder="예) 홍길동"
-                maxLength={40}
-              />
-            </div>
             <div className="grid gap-2">
               <Label htmlFor="community-title">제목</Label>
               <Input
@@ -476,14 +430,10 @@ export default function CommunitySection() {
           </div>
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsEditorOpen(false)}
-            >
+            <Button type="button" variant="outline" onClick={closeEditor}>
               취소
             </Button>
-            <Button type="button" onClick={upsertPostFromDraft}>
+            <Button type="button" onClick={submitDraft} disabled={isSubmitting}>
               {editingPostId ? '수정 저장' : '작성'}
             </Button>
           </DialogFooter>
@@ -498,39 +448,45 @@ export default function CommunitySection() {
           {selectedPost ? (
             <>
               <DialogHeader>
-                <DialogTitle className="text-left">
+                <DialogTitle className="mb-2 text-left">
                   {selectedPost.title}
                 </DialogTitle>
-                <DialogDescription className="text-left">
-                  작성자 {selectedPost.author} · 작성{' '}
-                  {formatDateTime(selectedPost.createdAt)}
-                  {' · '}수정 {formatDateTime(selectedPost.updatedAt)}
+                <DialogDescription className="flex flex-wrap items-center gap-1.5 text-left">
+                  <AuthorAvatar
+                    author={selectedPost.author}
+                    avatarUrl={selectedPost.avatar_url}
+                  />
+                  {selectedPost.author}
+                  {' \b · \b '}
+                  {formatDateTime(selectedPost.updated_at)} 수정
                 </DialogDescription>
               </DialogHeader>
               <div className="whitespace-pre-wrap rounded-lg border border-slate-200 bg-white/60 p-4 text-sm leading-6 text-slate-700">
-                {selectedPost.content}
+                {selectedPost.description}
               </div>
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setSelectedPostId(null);
-                    openEdit(selectedPost);
-                  }}
-                >
-                  <SquarePen className="mr-2 h-4 w-4" />
-                  수정
-                </Button>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={() => requestDelete(selectedPost.id)}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  삭제
-                </Button>
-              </DialogFooter>
+              {user?.id === selectedPost.user_id && (
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedPostId(null);
+                      openEdit(selectedPost);
+                    }}
+                  >
+                    <SquarePen className="mr-2 h-4 w-4" />
+                    수정
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => requestDelete(selectedPost.id)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    삭제
+                  </Button>
+                </DialogFooter>
+              )}
             </>
           ) : (
             <div className="py-6">
