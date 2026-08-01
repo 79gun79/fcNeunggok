@@ -70,6 +70,20 @@ const members: Member[] = [
     color: 'from-indigo-500 to-blue-600',
     image: '/profile/jaeyeong.png',
   },
+  {
+    id: 'son-heungmin',
+    name: '우리흥',
+    birthDate: '1992-07-08',
+    color: 'from-yellow-500 to-orange-600',
+    image: '/profile/heungmin.jpeg',
+  },
+  {
+    id: 'lee-kangin',
+    name: '이강인',
+    birthDate: '2001-02-19',
+    color: 'from-yellow-500 to-orange-600',
+    image: '/profile/kangin.jpeg',
+  },
 ];
 
 const formatBirthDate = (birthDate: string) => {
