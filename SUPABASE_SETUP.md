@@ -318,10 +318,12 @@ npx supabase link --project-ref gfnbobmngrydoejnnehs
 # 다운받은 JSON 파일 내용을 통째로 시크릿으로 등록
 npx supabase secrets set FIREBASE_SERVICE_ACCOUNT_JSON="$(cat /path/to/service-account.json)"
 
-npx supabase functions deploy notify-score-change
+npx supabase functions deploy notify-score-change --no-verify-jwt
 ```
 
 `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`는 Edge Function 실행 환경에 Supabase가 자동으로 주입하므로 별도 설정이 필요 없습니다.
+
+> `--no-verify-jwt`가 꼭 필요합니다. Supabase Edge Function은 기본적으로 모든 요청(브라우저의 CORS 프리플라이트 OPTIONS 요청 포함)에 플랫폼 레벨 JWT 검증을 먼저 적용하는데, 이 OPTIONS 요청에는 Authorization 헤더가 없어서 우리 코드에 도달하기도 전에 거부되어 CORS 에러로 보입니다. 관리자 인증은 함수 코드 안에서 JWT의 email을 직접 검사하므로 플랫폼 검증은 꺼도 안전합니다.
 
 ### 3) 동작 방식
 
