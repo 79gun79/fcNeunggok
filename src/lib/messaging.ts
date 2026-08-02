@@ -82,6 +82,22 @@ export const requestFcmToken = async (): Promise<string | null> => {
   }
 };
 
+// 앱을 열 때마다 호출해서 서비스 워커 스크립트가 최신인지 확인/갱신합니다.
+// register()를 다시 호출하는 것 자체가 브라우저의 바이트 비교 업데이트 체크를
+// 트리거하며, 알림 권한과 무관하므로 로그인/권한 여부와 상관없이 호출 가능합니다.
+export const ensureFcmServiceWorkerUpToDate = async () => {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    const registration = await navigator.serviceWorker.register(
+      '/firebase-messaging-sw.js',
+      { scope: '/firebase-cloud-messaging-push-scope' },
+    );
+    await registration.update();
+  } catch (error) {
+    console.error('서비스 워커 업데이트 확인 실패:', error);
+  }
+};
+
 export const onForegroundMessage = async (
   callback: (payload: MessagePayload) => void,
 ) => {
