@@ -16,6 +16,13 @@ firebase.initializeApp({
   appId: '1:411269228791:web:fb49297a37d46552658bf2',
 });
 
+// 새 버전이 배포되면 대기 없이 바로 활성화되도록 함 (안 그러면 탭을 모두
+// 닫았다 열어야 새 서비스 워커 코드가 적용됨)
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
 const messaging = firebase.messaging();
 
 // notification 필드 대신 data만 받습니다 — notification을 쓰면 브라우저가
