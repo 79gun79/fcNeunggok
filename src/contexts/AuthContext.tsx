@@ -1,15 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { requestFcmToken } from '@/lib/messaging';
-import { saveFcmToken } from '@/api/fcmTokens';
 
 interface AuthContextType {
   user: User | null;
@@ -35,26 +27,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const fcmRegisteredUserId = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (!user) {
-      fcmRegisteredUserId.current = null;
-      return;
-    }
-    if (fcmRegisteredUserId.current === user.id) return;
-    fcmRegisteredUserId.current = user.id;
-
-    (async () => {
-      const token = await requestFcmToken();
-      if (!token) return;
-
-      const result = await saveFcmToken(token);
-      if (!result.success) {
-        console.error('FCM 토큰 저장 실패:', result.error);
-      }
-    })();
-  }, [user]);
 
   useEffect(() => {
     // 초기 세션 확인

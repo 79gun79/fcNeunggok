@@ -1,6 +1,6 @@
 import AuthButton from '@/components/AuthButton';
 import { AnimatePresence, motion } from 'motion/react';
-import { ChevronRight, LogIn, LogOut, X } from 'lucide-react';
+import { Bell, BellOff, ChevronRight, LogIn, LogOut, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation } from 'react-router-dom';
@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import { requestFcmToken } from '@/lib/messaging';
+import { saveFcmToken } from '@/api/fcmTokens';
 
 const navItems = [
   { label: 'Community', to: '/community', comingSoon: false },
@@ -22,6 +24,42 @@ const HomeHeader = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [notificationPermission, setNotificationPermission] =
+    useState<NotificationPermission>('default');
+  const [isRequestingNotification, setIsRequestingNotification] =
+    useState(false);
+
+  useEffect(() => {
+    if (typeof Notification !== 'undefined') {
+      setNotificationPermission(Notification.permission);
+    }
+  }, []);
+
+  const handleEnableNotifications = async () => {
+    if (isRequestingNotification || notificationPermission === 'denied')
+      return;
+    setIsRequestingNotification(true);
+    try {
+      const token = await requestFcmToken();
+      if (typeof Notification !== 'undefined') {
+        setNotificationPermission(Notification.permission);
+      }
+      if (!token) {
+        sonnerToast.error(
+          '알림 권한이 거부되었거나 이 브라우저는 지원하지 않습니다.',
+        );
+        return;
+      }
+      const result = await saveFcmToken(token);
+      if (!result.success) {
+        sonnerToast.error(result.error ?? '알림 등록에 실패했습니다.');
+        return;
+      }
+      sonnerToast.success('알림을 받도록 설정했습니다.');
+    } finally {
+      setIsRequestingNotification(false);
+    }
+  };
 
   const handleNavClick = (to: string) => {
     setIsMobileMenuOpen(false);
@@ -245,6 +283,33 @@ const HomeHeader = () => {
               </Link>
             ))}
           </nav>
+          {user && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={handleEnableNotifications}
+              disabled={
+                isRequestingNotification ||
+                notificationPermission === 'denied'
+              }
+              aria-label="알림 받기"
+              title={
+                notificationPermission === 'denied'
+                  ? '브라우저 알림 설정에서 허용해주세요'
+                  : notificationPermission === 'granted'
+                    ? '알림이 켜져 있습니다'
+                    : '알림 받기'
+              }
+              className="text-white/70 hover:bg-white/10 hover:text-white"
+            >
+              {notificationPermission === 'granted' ? (
+                <Bell className="h-4 w-4" />
+              ) : (
+                <BellOff className="h-4 w-4" />
+              )}
+            </Button>
+          )}
           <div className="hidden md:block">
             <AuthButton />
           </div>
