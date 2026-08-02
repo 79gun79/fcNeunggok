@@ -21,6 +21,19 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// 구글 로그인 리다이렉트 직후에는 세션이 아직 완전히 정착되지 않아
+// RLS 체크(auth.uid())가 잠깐 실패할 수 있어 짧게 재시도합니다.
+const saveFcmTokenWithRetry = async (token: string, attempts = 3) => {
+  let result = await saveFcmToken(token);
+  for (let i = 1; !result.success && i < attempts; i += 1) {
+    await sleep(500 * i);
+    result = await saveFcmToken(token);
+  }
+  return result;
+};
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
@@ -29,7 +42,9 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -47,7 +62,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const token = await requestFcmToken();
       if (!token) return;
 
-      const result = await saveFcmToken(token);
+      const result = await saveFcmTokenWithRetry(token);
       if (!result.success) {
         console.error('FCM 토큰 저장 실패:', result.error);
       }
@@ -63,13 +78,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     // 인증 상태 변경 리스너
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
@@ -78,18 +93,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // localhost에서 실행 중이면(DEV/PROD 상관없이) 로컬로 돌아오도록 최우선 처리합니다.
     // Supabase Redirect URLs에도 해당 origin(예: http://localhost:8080)을 반드시 등록해야 합니다.
     const isLocalhost =
-      window.location.hostname === "localhost" ||
-      window.location.hostname === "127.0.0.1";
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1';
 
     const redirectTo = isLocalhost
-      ? (import.meta.env.VITE_DEV_REDIRECT_URL || window.location.origin)
-      : (import.meta.env.VITE_REDIRECT_URL || window.location.origin);
+      ? import.meta.env.VITE_DEV_REDIRECT_URL || window.location.origin
+      : import.meta.env.VITE_REDIRECT_URL || window.location.origin;
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: redirectTo
-      }
+        redirectTo: redirectTo,
+      },
     });
     return { error };
   };
@@ -107,9 +122,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
