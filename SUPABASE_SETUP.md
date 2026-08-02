@@ -262,6 +262,37 @@ CREATE POLICY "Only the admin can update points"
 
 앱에서는 `79gun79@gmail.com` 계정으로 구글 로그인했을 때만 Point 페이지에 점수 +/- 버튼이 표시됩니다. 실제 권한은 위 RLS 정책이 서버 단에서 강제하므로, 다른 계정으로는 API를 직접 호출해도 수정되지 않습니다. 관리자를 추가하거나 바꾸려면 이 정책의 이메일 조건을 수정하세요.
 
+## 8. FCM 토큰(fcm_tokens) 테이블 설정
+
+로그인한 사용자가 브라우저 알림 권한을 허용하면, 앱이 자동으로 FCM 등록 토큰을 발급받아 `fcm_tokens` 테이블에 저장합니다. 나중에 이 테이블의 토큰들로 실제 발송 대상을 정할 수 있습니다.
+
+```sql
+-- fcm_tokens 테이블 생성
+CREATE TABLE IF NOT EXISTS fcm_tokens (
+  id SERIAL PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) NOT NULL,
+  token TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- Row Level Security (RLS) 설정
+ALTER TABLE fcm_tokens ENABLE ROW LEVEL SECURITY;
+
+-- 본인 토큰만 등록 가능
+CREATE POLICY "Users can insert their own fcm token"
+  ON fcm_tokens FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- 본인 토큰만 수정 가능 (동일 토큰 재발급 시 upsert)
+CREATE POLICY "Users can update their own fcm token"
+  ON fcm_tokens FOR UPDATE
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+```
+
+읽기(SELECT) 정책은 만들지 않았습니다 — 토큰 목록은 Supabase 대시보드의 Table Editor(서비스 역할 권한으로 RLS를 우회함)에서만 확인하면 되고, 클라이언트에서 다른 사용자의 토큰을 조회할 필요는 없기 때문입니다.
+
 ## 문제 해결
 
 ### 환경 변수가 설정되지 않았다는 경고가 나타나는 경우
