@@ -3,6 +3,7 @@ import { SquarePen, Trophy } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast as sonnerToast } from 'sonner';
 import { fetchPoints, updatePointScore } from '@/api/points';
+import { notifyScoreChange } from '@/api/notify';
 import type { Point } from '@/types/point';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -35,12 +36,15 @@ const PointSection = () => {
   const scoreMutation = useMutation({
     mutationFn: ({ id, score }: { id: string; score: number }) =>
       updatePointScore(id, score),
-    onSuccess: (result) => {
+    onSuccess: (result, variables) => {
       if (!result.success) {
         sonnerToast.error(result.error ?? '점수 수정에 실패했습니다.');
         return;
       }
       queryClient.invalidateQueries({ queryKey: ['points'] });
+      if (editingMember) {
+        notifyScoreChange(editingMember.name, variables.score);
+      }
       setEditingMember(null);
       sonnerToast.success('점수를 수정했습니다.');
     },

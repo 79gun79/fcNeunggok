@@ -300,6 +300,35 @@ CREATE POLICY "Users can view their own fcm token"
 
 > SELECT 정책이 꼭 필요합니다. 클라이언트는 `upsert(..., { onConflict: 'token' })`로 저장하는데, `INSERT ... ON CONFLICT DO UPDATE`가 충돌 여부를 판단하려면 RLS 하에서 기존 행을 조회할 수 있어야 합니다. SELECT 정책이 없으면 INSERT/UPDATE 정책이 맞아도 매번 `new row violates row-level security policy` 오류가 발생합니다 (실제로 이 프로젝트에서 겪은 문제였습니다).
 
+## 9. 점수 변경 시 자동 푸시 발송 (Edge Function)
+
+관리자가 Point 페이지에서 점수를 수정하면, `fcm_tokens`에 등록된 모든 기기로 자동 푸시가 발송됩니다. 클라이언트가 점수 수정 성공 직후 Supabase Edge Function(`notify-score-change`)을 호출하고, 그 함수가 Firebase Admin SDK로 전체 토큰에 발송합니다.
+
+### 1) Firebase 서비스 계정 키 발급
+
+1. Firebase 콘솔 → 프로젝트 설정 → **서비스 계정** 탭
+2. "새 비공개 키 생성" 클릭 → JSON 파일 다운로드 (절대 git에 커밋하지 말 것)
+
+### 2) Supabase CLI로 배포
+
+```bash
+npx supabase login
+npx supabase link --project-ref gfnbobmngrydoejnnehs
+
+# 다운받은 JSON 파일 내용을 통째로 시크릿으로 등록
+npx supabase secrets set FIREBASE_SERVICE_ACCOUNT_JSON="$(cat /path/to/service-account.json)"
+
+npx supabase functions deploy notify-score-change
+```
+
+`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`는 Edge Function 실행 환경에 Supabase가 자동으로 주입하므로 별도 설정이 필요 없습니다.
+
+### 3) 동작 방식
+
+- 관리자(`79gun79@gmail.com`)가 로그인한 상태에서만 함수가 정상 동작합니다 (Authorization 헤더의 JWT에서 email을 확인해 그 외 요청은 403 거부).
+- Table Editor에서 직접 `points.score`를 고치는 경우는 이 흐름을 타지 않아 알림이 가지 않습니다 (의도된 동작).
+- 함수 코드: [supabase/functions/notify-score-change/index.ts](supabase/functions/notify-score-change/index.ts)
+
 ## 문제 해결
 
 ### 환경 변수가 설정되지 않았다는 경고가 나타나는 경우
