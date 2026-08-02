@@ -28,6 +28,7 @@ const messaging = firebase.messaging();
 // notification 필드 대신 data만 받습니다 — notification을 쓰면 브라우저가
 // 자동으로 한 번 띄우고, 아래 코드가 또 한 번 띄워서 알림이 중복으로 발송됩니다.
 messaging.onBackgroundMessage((payload) => {
+  console.log('[FCM] background payload:', JSON.stringify(payload));
   const { title, body, icon } = payload.data || {};
   self.registration.showNotification(title || 'FC 능곡', {
     body,
