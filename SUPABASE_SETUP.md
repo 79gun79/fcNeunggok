@@ -276,22 +276,16 @@ CREATE TABLE IF NOT EXISTS fcm_tokens (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- Row Level Security (RLS) 설정
-ALTER TABLE fcm_tokens ENABLE ROW LEVEL SECURITY;
-
--- 본인 토큰만 등록 가능
-CREATE POLICY "Users can insert their own fcm token"
-  ON fcm_tokens FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
-
--- 본인 토큰만 수정 가능 (동일 토큰 재발급 시 upsert)
-CREATE POLICY "Users can update their own fcm token"
-  ON fcm_tokens FOR UPDATE
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+-- RLS는 비활성화 상태로 둡니다.
+-- 이 프로젝트에서는 로그인 직후 클라이언트가 보내는 요청의 auth.uid()가
+-- user_id와 매칭되지 않아 "new row violates row-level security policy" 오류가 발생합니다
+-- (habits 테이블에서도 동일한 문제로 RLS를 껐던 이력이 있습니다 — 근본 원인 미확인).
+-- 내부 소수 인원용 앱이라 리스크가 낮다고 판단해 RLS 없이 운영합니다.
 ```
 
-읽기(SELECT) 정책은 만들지 않았습니다 — 토큰 목록은 Supabase 대시보드의 Table Editor(서비스 역할 권한으로 RLS를 우회함)에서만 확인하면 되고, 클라이언트에서 다른 사용자의 토큰을 조회할 필요는 없기 때문입니다.
+토큰 목록은 Supabase 대시보드의 Table Editor(서비스 역할 권한 사용)에서 확인하면 됩니다.
+
+> ⚠️ RLS가 꺼져 있으므로, 이론상 인증된 클라이언트가 임의의 `user_id`로 토큰을 저장할 수 있습니다. 나중에 이 프로젝트의 auth.uid() RLS 미스매치 원인을 제대로 찾으면 다시 활성화하는 걸 권장합니다.
 
 ## 문제 해결
 
