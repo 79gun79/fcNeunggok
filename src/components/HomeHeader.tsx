@@ -14,6 +14,7 @@ const navItems = [
   { label: 'Community', to: '/community', comingSoon: false },
   { label: 'Gallery', to: '/gallery', comingSoon: false },
   { label: 'Birthday', to: '/birthday', comingSoon: false },
+  { label: 'Point', to: '/point', comingSoon: false },
 ];
 
 const HomeHeader = () => {

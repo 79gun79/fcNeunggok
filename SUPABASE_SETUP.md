@@ -92,10 +92,11 @@ VITE_SUPABASE_ANON_KEY=your-anon-key-here
 1. Supabase 대시보드에서 Authentication > Settings 메뉴로 이동합니다.
 2. "Site URL"을 배포된 사이트 URL로 설정합니다 (예: https://your-site-name.netlify.app).
 3. "Redirect URLs"에 다음 URL들을 추가합니다:
-  - 로컬 개발: `http://localhost:5173`
-  - 로컬 개발(대체): `http://127.0.0.1:5173`
-  - 커스텀 포트를 쓴다면 해당 포트도 추가 (예: `http://localhost:8080`)
-   - 배포 환경: `https://your-site-name.netlify.app`
+
+- 로컬 개발: `http://localhost:5173`
+- 로컬 개발(대체): `http://127.0.0.1:5173`
+- 커스텀 포트를 쓴다면 해당 포트도 추가 (예: `http://localhost:8080`)
+- 배포 환경: `https://your-site-name.netlify.app`
 
 ### 환경별 설정
 
@@ -106,6 +107,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key-here
 ### 배포 플랫폼별 환경변수 설정 예시
 
 #### Netlify
+
 ```env
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
@@ -113,6 +115,7 @@ VITE_REDIRECT_URL=https://your-site-name.netlify.app
 ```
 
 #### Vercel
+
 ```env
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
@@ -120,6 +123,7 @@ VITE_REDIRECT_URL=https://your-site-name.vercel.app
 ```
 
 #### 일반적인 웹 호스팅
+
 배포된 사이트의 실제 URL을 `VITE_REDIRECT_URL`로 설정하세요.
 
 ## 4.5. 구글 인증 설정
@@ -212,6 +216,51 @@ npm run dev
 ```
 
 브라우저 콘솔에서 오류가 없는지 확인하고, 갤러리 섹션이 정상적으로 표시되는지 확인합니다.
+
+## 7. Point(순위표) 테이블 설정
+
+Point 페이지는 Supabase의 `points` 테이블에서 멤버별 점수를 읽어와 순위표를 보여줍니다.
+
+```sql
+-- points 테이블 생성
+CREATE TABLE IF NOT EXISTS points (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  color TEXT NOT NULL,
+  image TEXT,
+  score INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- 초기 멤버 데이터 삽입 (점수는 0으로 초기화)
+INSERT INTO points (id, name, color, image, score) VALUES
+  ('choi-jinhyuk', '최진혁', 'from-emerald-500 to-teal-600', '/profile/jinhyuk.png', 0),
+  ('an-chiguk', '안치국', 'from-amber-500 to-orange-600', NULL, 0),
+  ('seo-yugwan', '서유관', 'from-violet-500 to-purple-600', '/profile/yugwan.png', 0),
+  ('park-hyeongyeom', '박현겸', 'from-rose-500 to-pink-600', '/profile/hyeongyeom.png', 0),
+  ('park-seongmin', '박성민', 'from-cyan-500 to-sky-600', '/profile/seongmin.png', 0),
+  ('jang-junhyeok', '장준혁', 'from-lime-500 to-green-600', NULL, 0),
+  ('moon-jeyeong', '문제영', 'from-fuchsia-500 to-rose-600', '/profile/jeyeong.png', 0),
+  ('han-jaeyeong', '한재영', 'from-indigo-500 to-blue-600', '/profile/jaeyeong.png', 0)
+ON CONFLICT (id) DO NOTHING;
+
+-- Row Level Security (RLS) 설정
+ALTER TABLE points ENABLE ROW LEVEL SECURITY;
+
+-- 읽기는 모든 사용자에게 허용
+CREATE POLICY "Points are viewable by everyone"
+  ON points FOR SELECT
+  USING (true);
+
+-- 점수 수정은 지정된 관리자 이메일만 허용
+CREATE POLICY "Only the admin can update points"
+  ON points FOR UPDATE
+  USING (auth.jwt() ->> 'email' = '79gun79@gmail.com')
+  WITH CHECK (auth.jwt() ->> 'email' = '79gun79@gmail.com');
+```
+
+앱에서는 `79gun79@gmail.com` 계정으로 구글 로그인했을 때만 Point 페이지에 점수 +/- 버튼이 표시됩니다. 실제 권한은 위 RLS 정책이 서버 단에서 강제하므로, 다른 계정으로는 API를 직접 호출해도 수정되지 않습니다. 관리자를 추가하거나 바꾸려면 이 정책의 이메일 조건을 수정하세요.
 
 ## 문제 해결
 
