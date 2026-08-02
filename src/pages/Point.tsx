@@ -1,7 +1,6 @@
 import { Helmet } from 'react-helmet-async';
 import HomeHeader from '@/components/HomeHeader';
 import PointSection from '@/components/PointSection';
-import NotificationTestSection from '@/components/NotificationTestSection';
 import FooterSection from '@/components/FooterSection';
 
 const Point = () => {
@@ -19,7 +18,6 @@ const Point = () => {
       <HomeHeader />
       <main className="min-h-screen overflow-hidden bg-background">
         <PointSection />
-        <NotificationTestSection />
         <FooterSection />
       </main>
     </>
