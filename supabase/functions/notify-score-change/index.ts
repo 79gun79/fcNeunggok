@@ -70,9 +70,12 @@ Deno.serve(async (req) => {
       });
     }
 
+    // notification 필드를 쓰면 브라우저가 자동으로 한 번 띄우고, 서비스 워커의
+    // onBackgroundMessage가 또 띄워서 알림이 중복 발송된다. data만 보내고
+    // 표시는 서비스 워커 쪽에서만 하도록 한다.
     const response = await admin.messaging().sendEachForMulticast({
       tokens,
-      notification: {
+      data: {
         title: 'FC 능곡 포인트',
         body: `${name}님의 점수가 ${score}점으로 변경됐습니다.`,
       },
