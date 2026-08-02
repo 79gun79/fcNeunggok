@@ -29,10 +29,8 @@ const messaging = firebase.messaging();
 // 자동으로 한 번 띄우고, 아래 코드가 또 한 번 띄워서 알림이 중복으로 발송됩니다.
 messaging.onBackgroundMessage((payload) => {
   const { title, body, icon } = payload.data || {};
-  // 디버깅용: data가 비어있으면 원본 payload를 그대로 알림 본문에 노출해서
-  // devtools 없이도 실제 도착한 내용을 바로 확인할 수 있게 함.
-  self.registration.showNotification(title || 'FC 능곡 (DEBUG)', {
-    body: body || `RAW: ${JSON.stringify(payload)}`,
+  self.registration.showNotification(title || 'FC 능곡', {
+    body,
     icon: icon || '/favicon/web-app-manifest-192x192.png',
   });
 });
