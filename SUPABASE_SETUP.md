@@ -289,11 +289,16 @@ CREATE POLICY "Users can update their own fcm token"
   ON fcm_tokens FOR UPDATE
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
+
+-- 본인 토큰만 조회 가능 (upsert의 충돌 감지에 필요 — 아래 설명 참고)
+CREATE POLICY "Users can view their own fcm token"
+  ON fcm_tokens FOR SELECT
+  USING (auth.uid() = user_id);
 ```
 
 토큰 목록은 Supabase 대시보드의 Table Editor(서비스 역할 권한 사용)에서 확인하면 됩니다.
 
-> 구글 로그인 리다이렉트 직후에는 세션이 완전히 정착되기 전이라 `auth.uid()` 기반 RLS 체크가 아주 짧은 순간 실패할 수 있습니다(`debug_whoami` RPC로 auth.uid()가 정상적으로 JWT의 sub와 일치함을 확인했고, 실패는 타이밍 이슈였습니다). 그래서 클라이언트 쪽 `AuthContext`에서 저장 실패 시 짧게 대기 후 최대 2회 재시도합니다. RLS는 켜둔 채로 안전하게 운영합니다.
+> SELECT 정책이 꼭 필요합니다. 클라이언트는 `upsert(..., { onConflict: 'token' })`로 저장하는데, `INSERT ... ON CONFLICT DO UPDATE`가 충돌 여부를 판단하려면 RLS 하에서 기존 행을 조회할 수 있어야 합니다. SELECT 정책이 없으면 INSERT/UPDATE 정책이 맞아도 매번 `new row violates row-level security policy` 오류가 발생합니다 (실제로 이 프로젝트에서 겪은 문제였습니다).
 
 ## 문제 해결
 

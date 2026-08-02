@@ -21,19 +21,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-// 구글 로그인 리다이렉트 직후에는 세션이 아직 완전히 정착되지 않아
-// RLS 체크(auth.uid())가 잠깐 실패할 수 있어 짧게 재시도합니다.
-const saveFcmTokenWithRetry = async (token: string, attempts = 3) => {
-  let result = await saveFcmToken(token);
-  for (let i = 1; !result.success && i < attempts; i += 1) {
-    await sleep(500 * i);
-    result = await saveFcmToken(token);
-  }
-  return result;
-};
-
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
@@ -62,7 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const token = await requestFcmToken();
       if (!token) return;
 
-      const result = await saveFcmTokenWithRetry(token);
+      const result = await saveFcmToken(token);
       if (!result.success) {
         console.error('FCM 토큰 저장 실패:', result.error);
       }
