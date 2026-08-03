@@ -221,41 +221,6 @@ const GallerySection = () => {
             </div>
           ) : (
             <>
-              {photos.map((photo, index) => (
-                <div
-                  key={photo.id}
-                  className={`group relative aspect-[0.92] cursor-pointer overflow-hidden rounded-[1.35rem] border border-white/[0.12] bg-white/[0.06] shadow-[0_18px_40px_-20px_rgba(0,0,0,0.45)] transition-all duration-500 sm:aspect-[0.95] sm:rounded-[1.75rem] ${
-                    isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
-                  }`}
-                  style={{ transitionDelay: `${300 + index * 100}ms` }}
-                  onClick={() => handlePhotoClick(photo)}
-                >
-                  <img
-                    src={photo.src}
-                    alt={photo.description}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 p-4 !text-white sm:p-5">
-                    <p className="max-h-12 overflow-hidden !text-base font-semibold leading-6 sm:max-h-14 sm:!text-lg sm:leading-7">
-                      {photo.description}
-                    </p>
-                    <div className="mt-2 flex items-center justify-between gap-3 !text-xs !text-white/80 sm:mt-3 sm:!text-sm">
-                      <span className="truncate">
-                        {photo.user_name || 'FC 능곡 멤버'}
-                      </span>
-                      {photo.created_at && (
-                        <span>
-                          {new Date(photo.created_at).toLocaleDateString(
-                            'ko-KR',
-                          )}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-
               {user && (
                 <Dialog
                   open={isUploadDialogOpen}
@@ -362,6 +327,41 @@ const GallerySection = () => {
                   </DialogContent>
                 </Dialog>
               )}
+
+              {photos.map((photo, index) => (
+                <div
+                  key={photo.id}
+                  className={`group relative aspect-[0.92] cursor-pointer overflow-hidden rounded-[1.35rem] border border-white/[0.12] bg-white/[0.06] shadow-[0_18px_40px_-20px_rgba(0,0,0,0.45)] transition-all duration-500 sm:aspect-[0.95] sm:rounded-[1.75rem] ${
+                    isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
+                  }`}
+                  style={{ transitionDelay: `${300 + index * 100}ms` }}
+                  onClick={() => handlePhotoClick(photo)}
+                >
+                  <img
+                    src={photo.src}
+                    alt={photo.description}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 p-4 !text-white sm:p-5">
+                    <p className="max-h-12 overflow-hidden !text-base font-semibold leading-6 sm:max-h-14 sm:!text-lg sm:leading-7">
+                      {photo.description}
+                    </p>
+                    <div className="mt-2 flex items-center justify-between gap-3 !text-xs !text-white/80 sm:mt-3 sm:!text-sm">
+                      <span className="truncate">
+                        {photo.user_name || 'FC 능곡 멤버'}
+                      </span>
+                      {photo.created_at && (
+                        <span>
+                          {new Date(photo.created_at).toLocaleDateString(
+                            'ko-KR',
+                          )}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
 
               <Dialog
                 open={isPhotoModalOpen}
