@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SquarePen, Trophy } from 'lucide-react';
+import { ShieldCheck, SquarePen, Trophy } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast as sonnerToast } from 'sonner';
 import { fetchPoints, updatePointScore } from '@/api/points';
@@ -100,12 +100,38 @@ const PointSection = () => {
               {sortedMembers.map((member, index) => {
                 const rank = index + 1;
                 const isTop = rank === 1;
+                const isBottom =
+                  rank === sortedMembers.length && sortedMembers.length > 1;
                 return (
                   <div
                     key={member.id}
-                    className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white/70 p-4 transition-shadow hover:shadow-[0_16px_40px_-24px_rgba(15,23,42,0.25)] sm:p-5"
+                    className={`relative flex items-center gap-4 rounded-2xl border p-4 transition-shadow sm:p-5 ${
+                      isTop
+                        ? 'border-red-300 bg-red-50/60 shadow-[0_16px_40px_-20px_rgba(220,38,38,0.45)] ring-1 ring-red-200 hover:shadow-[0_20px_44px_-18px_rgba(220,38,38,0.5)]'
+                        : isBottom
+                          ? 'border-emerald-200 bg-emerald-50/50 hover:shadow-[0_16px_40px_-24px_rgba(16,185,129,0.3)]'
+                          : 'border-slate-200 bg-white/70 hover:shadow-[0_16px_40px_-24px_rgba(15,23,42,0.25)]'
+                    }`}
                   >
-                    <span className="flex w-8 shrink-0 items-center justify-center text-lg font-bold text-slate-400">
+                    {isTop && (
+                      <span className="absolute -top-2.5 left-4 flex items-center gap-1 rounded-full bg-red-500 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
+                        위험
+                      </span>
+                    )}
+                    {isBottom && (
+                      <span className="absolute -top-2.5 left-4 flex items-center gap-1 rounded-full bg-emerald-500 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
+                        관리자 유력
+                      </span>
+                    )}
+                    <span
+                      className={`flex w-8 shrink-0 items-center justify-center text-lg font-bold ${
+                        isTop
+                          ? 'text-red-500'
+                          : isBottom
+                            ? 'text-emerald-500'
+                            : 'text-slate-400'
+                      }`}
+                    >
                       {rank}
                     </span>
 
@@ -129,9 +155,28 @@ const PointSection = () => {
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white/70 px-3 py-2">
-                      {isTop && <Trophy className="h-4 w-4 text-amber-500" />}
-                      <span className="text-sm font-semibold text-slate-900">
+                    <div
+                      className={`flex items-center gap-1 rounded-xl border px-3 py-2 ${
+                        isTop
+                          ? 'border-red-200 bg-red-100/70'
+                          : isBottom
+                            ? 'border-emerald-200 bg-emerald-100/60'
+                            : 'border-slate-200 bg-white/70'
+                      }`}
+                    >
+                      {isTop && <Trophy className="h-4 w-4 text-red-500" />}
+                      {isBottom && (
+                        <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                      )}
+                      <span
+                        className={`text-sm font-semibold ${
+                          isTop
+                            ? 'text-red-600'
+                            : isBottom
+                              ? 'text-emerald-600'
+                              : 'text-slate-900'
+                        }`}
+                      >
                         {member.score}점
                       </span>
                     </div>
