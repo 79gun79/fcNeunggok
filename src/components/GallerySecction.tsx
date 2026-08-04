@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Camera, Plus, Trash2, Upload, X } from 'lucide-react';
+import { Camera, Heart, Plus, Trash2, Upload, X } from 'lucide-react';
 import { fetchPhotos, uploadPhoto, deletePhoto } from '@/api/photos';
+import { fetchPhotoLikes, likePhoto, unlikePhoto } from '@/api/photoLikes';
 import { useAuth } from '@/contexts/AuthContext';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { useToast } from '@/hooks/use-toast';
@@ -48,6 +49,68 @@ const GallerySection = () => {
     queryFn: fetchPhotos,
     staleTime: 5 * 60 * 1000,
   });
+
+  const { data: likes = [] } = useQuery({
+    queryKey: ['photo_likes'],
+    queryFn: fetchPhotoLikes,
+    staleTime: 60 * 1000,
+  });
+
+  const toggleLikeMutation = useMutation({
+    mutationFn: ({
+      photoId,
+      isLiked,
+    }: {
+      photoId: number;
+      isLiked: boolean;
+    }) =>
+      isLiked ? unlikePhoto(photoId, user!.id) : likePhoto(photoId, user!.id),
+    onMutate: async ({ photoId, isLiked }) => {
+      await queryClient.cancelQueries({ queryKey: ['photo_likes'] });
+      const previousLikes = queryClient.getQueryData<
+        { photo_id: number; user_id: string }[]
+      >(['photo_likes']);
+
+      queryClient.setQueryData<{ photo_id: number; user_id: string }[]>(
+        ['photo_likes'],
+        (current = []) =>
+          isLiked
+            ? current.filter(
+                (like) =>
+                  !(like.photo_id === photoId && like.user_id === user!.id),
+              )
+            : [...current, { photo_id: photoId, user_id: user!.id }],
+      );
+
+      return { previousLikes };
+    },
+    onError: (error, _variables, context) => {
+      if (context?.previousLikes) {
+        queryClient.setQueryData(['photo_likes'], context.previousLikes);
+      }
+      toast({
+        title: '좋아요 처리 실패',
+        description: '네트워크 오류가 발생했습니다.',
+        variant: 'destructive',
+      });
+      console.error('Toggle like error:', error);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['photo_likes'] });
+    },
+  });
+
+  const handleToggleLike = (photoId: number, isLiked: boolean) => {
+    if (!user) {
+      toast({
+        title: '로그인이 필요합니다',
+        description: '좋아요를 누르려면 로그인해주세요.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    toggleLikeMutation.mutate({ photoId, isLiked });
+  };
 
   const uploadMutation = useMutation({
     mutationFn: ({ file, description }: { file: File; description: string }) =>
@@ -328,40 +391,66 @@ const GallerySection = () => {
                 </Dialog>
               )}
 
-              {photos.map((photo, index) => (
-                <div
-                  key={photo.id}
-                  className={`group relative aspect-[0.92] cursor-pointer overflow-hidden rounded-[1.35rem] border border-white/[0.12] bg-white/[0.06] shadow-[0_18px_40px_-20px_rgba(0,0,0,0.45)] transition-all duration-500 sm:aspect-[0.95] sm:rounded-[1.75rem] ${
-                    isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
-                  }`}
-                  style={{ transitionDelay: `${300 + index * 100}ms` }}
-                  onClick={() => handlePhotoClick(photo)}
-                >
-                  <img
-                    src={photo.src}
-                    alt={photo.description}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 p-4 !text-white sm:p-5">
-                    <p className="max-h-12 overflow-hidden !text-base font-semibold leading-6 sm:max-h-14 sm:!text-lg sm:leading-7">
-                      {photo.description}
-                    </p>
-                    <div className="mt-2 flex items-center justify-between gap-3 !text-xs !text-white/80 sm:mt-3 sm:!text-sm">
-                      <span className="truncate">
-                        {photo.user_name || 'FC 능곡 멤버'}
+              {photos.map((photo, index) => {
+                const photoLikes = likes.filter(
+                  (like) => like.photo_id === photo.id,
+                );
+                const isLiked = photoLikes.some(
+                  (like) => like.user_id === user?.id,
+                );
+
+                return (
+                  <div
+                    key={photo.id}
+                    className={`group relative aspect-[0.92] cursor-pointer overflow-hidden rounded-[1.35rem] border border-white/[0.12] bg-white/[0.06] shadow-[0_18px_40px_-20px_rgba(0,0,0,0.45)] transition-all duration-500 sm:aspect-[0.95] sm:rounded-[1.75rem] ${
+                      isVisible
+                        ? 'scale-100 opacity-100'
+                        : 'scale-95 opacity-0'
+                    }`}
+                    style={{ transitionDelay: `${300 + index * 100}ms` }}
+                    onClick={() => handlePhotoClick(photo)}
+                  >
+                    <img
+                      src={photo.src}
+                      alt={photo.description}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleToggleLike(photo.id, isLiked);
+                      }}
+                      className="absolute right-3 top-3 flex items-center gap-1 rounded-full border border-white/20 bg-black/30 px-2.5 py-1.5 !text-white backdrop-blur-md transition-colors hover:bg-black/50"
+                    >
+                      <Heart
+                        className={`h-4 w-4 ${isLiked ? 'fill-red-500 text-red-500' : ''}`}
+                      />
+                      <span className="!text-xs font-medium">
+                        {photoLikes.length}
                       </span>
-                      {photo.created_at && (
-                        <span>
-                          {new Date(photo.created_at).toLocaleDateString(
-                            'ko-KR',
-                          )}
+                    </button>
+                    <div className="absolute inset-x-0 bottom-0 p-4 !text-white sm:p-5">
+                      <p className="max-h-12 overflow-hidden !text-base font-semibold leading-6 sm:max-h-14 sm:!text-lg sm:leading-7">
+                        {photo.description}
+                      </p>
+                      <div className="mt-2 flex items-center justify-between gap-3 !text-xs !text-white/80 sm:mt-3 sm:!text-sm">
+                        <span className="truncate">
+                          {photo.user_name || 'FC 능곡 멤버'}
                         </span>
-                      )}
+                        {photo.created_at && (
+                          <span>
+                            {new Date(photo.created_at).toLocaleDateString(
+                              'ko-KR',
+                            )}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
               <Dialog
                 open={isPhotoModalOpen}
@@ -381,6 +470,33 @@ const GallerySection = () => {
                         />
                       </div>
                       <div className="w-full space-y-2">
+                        {(() => {
+                          const selectedPhotoLikes = likes.filter(
+                            (like) => like.photo_id === selectedPhoto.id,
+                          );
+                          const isSelectedLiked = selectedPhotoLikes.some(
+                            (like) => like.user_id === user?.id,
+                          );
+                          return (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleToggleLike(
+                                  selectedPhoto.id,
+                                  isSelectedLiked,
+                                )
+                              }
+                              className="flex items-center gap-1.5 rounded-full border border-white/20 bg-white/[0.06] px-3 py-1.5 !text-white transition-colors hover:bg-white/[0.12]"
+                            >
+                              <Heart
+                                className={`h-4 w-4 ${isSelectedLiked ? 'fill-red-500 text-red-500' : ''}`}
+                              />
+                              <span className="!text-sm font-medium">
+                                {selectedPhotoLikes.length}
+                              </span>
+                            </button>
+                          );
+                        })()}
                         <div className="flex items-center gap-2 !text-xs !text-white/60 sm:!text-sm">
                           <span className="font-medium !text-white/75">
                             작성자:
