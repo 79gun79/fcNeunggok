@@ -18,12 +18,12 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 
-const ADMIN_EMAIL = '79gun79@gmail.com';
+const ADMIN_EMAILS = ['79gun79@gmail.com', 'neunggok123@gmail.com'];
 
 const PointSection = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const isAdmin = user?.email === ADMIN_EMAIL;
+  const isAdmin = !!user?.email && ADMIN_EMAILS.includes(user.email);
 
   const { data: points = [], isLoading } = useQuery({
     queryKey: ['points'],

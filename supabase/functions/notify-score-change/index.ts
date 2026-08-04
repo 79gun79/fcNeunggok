@@ -1,7 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import admin from 'npm:firebase-admin@12';
 
-const ADMIN_EMAIL = '79gun79@gmail.com';
+const ADMIN_EMAILS = ['79gun79@gmail.com', 'neunggok123@gmail.com'];
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
 
   try {
     const email = decodeEmailFromJwt(req.headers.get('Authorization'));
-    if (email !== ADMIN_EMAIL) {
+    if (!email || !ADMIN_EMAILS.includes(email)) {
       return new Response(JSON.stringify({ error: '권한이 없습니다.' }), {
         status: 403,
         headers: jsonHeaders,
