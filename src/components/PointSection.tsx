@@ -43,7 +43,11 @@ const PointSection = () => {
       }
       queryClient.invalidateQueries({ queryKey: ['points'] });
       if (editingMember) {
-        notifyScoreChange(editingMember.name, variables.score);
+        notifyScoreChange(
+          editingMember.name,
+          editingMember.score,
+          variables.score,
+        );
       }
       setEditingMember(null);
       sonnerToast.success('점수를 수정했습니다.');

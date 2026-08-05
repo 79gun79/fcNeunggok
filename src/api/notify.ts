@@ -1,9 +1,13 @@
 import { supabase } from '@/lib/supabase';
 
-export const notifyScoreChange = async (name: string, score: number) => {
+export const notifyScoreChange = async (
+  name: string,
+  oldScore: number,
+  score: number,
+) => {
   try {
     const { error } = await supabase.functions.invoke('notify-score-change', {
-      body: { name, score },
+      body: { name, oldScore, score },
     });
 
     if (error) {
