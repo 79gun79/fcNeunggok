@@ -1,5 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { LogIn, Plus, Search, SquarePen, Trash2, User } from 'lucide-react';
+import {
+  LogIn,
+  Plus,
+  Search,
+  Send,
+  SquarePen,
+  Trash2,
+  User,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast as sonnerToast } from 'sonner';
 import {
@@ -10,6 +18,7 @@ import {
   getBestDisplayName,
   updatePost,
 } from '@/api/posts';
+import { createComment, deleteComment, fetchComments } from '@/api/comments';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   AlertDialog,
@@ -85,14 +94,29 @@ export default function CommunitySection() {
 
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
+  const [draftComment, setDraftComment] = useState('');
+  const [deleteCommentTargetId, setDeleteCommentTargetId] = useState<
+    number | null
+  >(null);
+
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ['posts'],
     queryFn: fetchPosts,
     staleTime: 60 * 1000,
   });
 
+  const { data: comments = [], isLoading: isCommentsLoading } = useQuery({
+    queryKey: ['comments', selectedPostId],
+    queryFn: () => fetchComments(selectedPostId as number),
+    enabled: selectedPostId !== null,
+    staleTime: 30 * 1000,
+  });
+
   const invalidatePosts = () =>
     queryClient.invalidateQueries({ queryKey: ['posts'] });
+
+  const invalidateComments = () =>
+    queryClient.invalidateQueries({ queryKey: ['comments', selectedPostId] });
 
   const createMutation = useMutation({
     mutationFn: () =>
@@ -150,6 +174,40 @@ export default function CommunitySection() {
     },
     onError: () => {
       sonnerToast.error('게시글 삭제 중 오류가 발생했습니다.');
+    },
+  });
+
+  const createCommentMutation = useMutation({
+    mutationFn: () =>
+      createComment(selectedPostId as number, {
+        content: safeTrim(draftComment),
+      }),
+    onSuccess: (result) => {
+      if (!result.success) {
+        sonnerToast.error(result.error ?? '댓글 작성에 실패했습니다.');
+        return;
+      }
+      invalidateComments();
+      setDraftComment('');
+    },
+    onError: () => {
+      sonnerToast.error('댓글 작성 중 오류가 발생했습니다.');
+    },
+  });
+
+  const deleteCommentMutation = useMutation({
+    mutationFn: (commentId: number) => deleteComment(commentId),
+    onSuccess: (result) => {
+      if (!result.success) {
+        sonnerToast.error(result.error ?? '댓글 삭제에 실패했습니다.');
+        return;
+      }
+      invalidateComments();
+      setDeleteCommentTargetId(null);
+      sonnerToast.success('댓글을 삭제했습니다.');
+    },
+    onError: () => {
+      sonnerToast.error('댓글 삭제 중 오류가 발생했습니다.');
     },
   });
 
@@ -232,6 +290,32 @@ export default function CommunitySection() {
   const confirmDelete = () => {
     if (!deleteTargetId) return;
     deleteMutation.mutate(deleteTargetId);
+  };
+
+  const submitComment = () => {
+    if (!user) {
+      sonnerToast.info('댓글 작성은 로그인 후 이용할 수 있어요.');
+      return;
+    }
+    const content = safeTrim(draftComment);
+    if (content.length < 1) {
+      sonnerToast.info('댓글 내용을 입력해 주세요.');
+      return;
+    }
+    if (content.length > 1000) {
+      sonnerToast.info('댓글은 1000자 이하로 작성해 주세요.');
+      return;
+    }
+    createCommentMutation.mutate();
+  };
+
+  const requestDeleteComment = (commentId: number) => {
+    setDeleteCommentTargetId(commentId);
+  };
+
+  const confirmDeleteComment = () => {
+    if (!deleteCommentTargetId) return;
+    deleteCommentMutation.mutate(deleteCommentTargetId);
   };
 
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
@@ -442,7 +526,12 @@ export default function CommunitySection() {
 
       <Dialog
         open={Boolean(selectedPostId)}
-        onOpenChange={(open) => setSelectedPostId(open ? selectedPostId : null)}
+        onOpenChange={(open) => {
+          setSelectedPostId(open ? selectedPostId : null);
+          if (!open) {
+            setDraftComment('');
+          }
+        }}
       >
         <DialogContent className="sm:max-w-2xl">
           {selectedPost ? (
@@ -464,6 +553,78 @@ export default function CommunitySection() {
               <div className="whitespace-pre-wrap rounded-lg border border-slate-200 bg-white/60 p-4 text-sm leading-6 text-slate-700">
                 {selectedPost.description}
               </div>
+
+              <div className="grid gap-3">
+                <p className="text-sm font-semibold text-slate-900">
+                  댓글 {comments.length}개
+                </p>
+
+                {isCommentsLoading ? (
+                  <p className="text-sm text-slate-500">불러오는 중...</p>
+                ) : comments.length === 0 ? (
+                  <p className="text-sm text-slate-500">
+                    아직 댓글이 없어요. 첫 댓글을 남겨보세요.
+                  </p>
+                ) : (
+                  <ul className="grid max-h-64 gap-3 overflow-y-auto pr-1">
+                    {comments.map((comment) => (
+                      <li
+                        key={comment.id}
+                        className="rounded-lg border border-slate-200 bg-white/60 p-3"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                            <AuthorAvatar
+                              author={comment.author}
+                              avatarUrl={comment.avatar_url}
+                              className="h-5 w-5"
+                            />
+                            <span className="font-medium text-slate-700">
+                              {comment.author}
+                            </span>
+                            <span>·</span>
+                            <span>{formatDateTime(comment.created_at)}</span>
+                          </div>
+                          {user?.id === comment.user_id && (
+                            <button
+                              type="button"
+                              className="shrink-0 text-xs text-slate-400 hover:text-destructive"
+                              onClick={() => requestDeleteComment(comment.id)}
+                            >
+                              삭제
+                            </button>
+                          )}
+                        </div>
+                        <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">
+                          {comment.content}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                <div className="flex items-start gap-2">
+                  <Textarea
+                    value={draftComment}
+                    onChange={(e) => setDraftComment(e.target.value)}
+                    placeholder={
+                      user ? '댓글을 입력하세요' : '로그인 후 댓글을 남겨보세요'
+                    }
+                    className="min-h-[44px] flex-1 resize-none"
+                    maxLength={1000}
+                    disabled={!user}
+                  />
+                  <Button
+                    type="button"
+                    size="icon"
+                    onClick={submitComment}
+                    disabled={!user || createCommentMutation.isPending}
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
               {user?.id === selectedPost.user_id && (
                 <DialogFooter>
                   <Button
@@ -513,6 +674,31 @@ export default function CommunitySection() {
             <AlertDialogCancel>취소</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              삭제
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={Boolean(deleteCommentTargetId)}
+        onOpenChange={(open) =>
+          setDeleteCommentTargetId(open ? deleteCommentTargetId : null)
+        }
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>댓글을 삭제할까요?</AlertDialogTitle>
+            <AlertDialogDescription>
+              삭제한 댓글은 되돌릴 수 없습니다.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>취소</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteComment}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               삭제
