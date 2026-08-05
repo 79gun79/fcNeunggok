@@ -9,6 +9,20 @@ export const postDraftSchema = z.object({
 
 export type PostDraft = z.infer<typeof postDraftSchema>;
 
+const notifyNewPost = async (postId: number) => {
+  try {
+    const { error } = await supabase.functions.invoke('notify-new-post', {
+      body: { postId },
+    });
+
+    if (error) {
+      console.error('새 글 알림 발송 오류:', error);
+    }
+  } catch (error) {
+    console.error('새 글 알림 발송 실패:', error);
+  }
+};
+
 export const getBestDisplayName = (user: {
   email?: string | null;
   user_metadata?: Record<string, unknown> | null;
@@ -84,6 +98,8 @@ export const createPost = async (
       console.error('게시글 작성 오류:', error);
       return { success: false, error: '게시글 작성에 실패했습니다.' };
     }
+
+    notifyNewPost(data.id);
 
     return { success: true, post: data };
   } catch (error) {
