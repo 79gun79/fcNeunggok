@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Sheet,
   SheetContent,
@@ -32,9 +33,10 @@ const PointSection = () => {
 
   const [editingMember, setEditingMember] = useState<Point | null>(null);
   const [draftScore, setDraftScore] = useState('');
+  const [draftReason, setDraftReason] = useState('');
 
   const scoreMutation = useMutation({
-    mutationFn: ({ id, score }: { id: string; score: number }) =>
+    mutationFn: ({ id, score }: { id: string; score: number; reason: string }) =>
       updatePointScore(id, score),
     onSuccess: (result, variables) => {
       if (!result.success) {
@@ -47,6 +49,7 @@ const PointSection = () => {
           editingMember.name,
           editingMember.score,
           variables.score,
+          variables.reason,
         );
       }
       setEditingMember(null);
@@ -60,6 +63,7 @@ const PointSection = () => {
   const openEdit = (member: Point) => {
     setEditingMember(member);
     setDraftScore(String(member.score));
+    setDraftReason('');
   };
 
   const submitScore = () => {
@@ -69,7 +73,11 @@ const PointSection = () => {
       sonnerToast.info('점수는 정수로 입력해 주세요.');
       return;
     }
-    scoreMutation.mutate({ id: editingMember.id, score });
+    scoreMutation.mutate({
+      id: editingMember.id,
+      score,
+      reason: draftReason.trim(),
+    });
   };
 
   const sortedMembers = [...points].sort((a, b) => b.score - a.score);
@@ -217,15 +225,26 @@ const PointSection = () => {
             </SheetDescription>
           </SheetHeader>
 
-          <div className="grid gap-2 py-4">
-            <Label htmlFor="point-score">점수</Label>
-            <Input
-              id="point-score"
-              type="number"
-              inputMode="numeric"
-              value={draftScore}
-              onChange={(e) => setDraftScore(e.target.value)}
-            />
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="point-score">점수</Label>
+              <Input
+                id="point-score"
+                type="number"
+                inputMode="numeric"
+                value={draftScore}
+                onChange={(e) => setDraftScore(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="point-reason">이유</Label>
+              <Textarea
+                id="point-reason"
+                placeholder="점수 변경 이유를 입력해 주세요."
+                value={draftReason}
+                onChange={(e) => setDraftReason(e.target.value)}
+              />
+            </div>
           </div>
 
           <SheetFooter>

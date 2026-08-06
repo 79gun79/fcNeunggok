@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { name, oldScore, score } = await req.json();
+    const { name, oldScore, score, reason } = await req.json();
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -72,12 +72,14 @@ Deno.serve(async (req) => {
 
     const diff = score - oldScore;
 
-    const body =
+    const baseBody =
       diff > 0
         ? `${name}아,  ${oldScore}점에서 점수 더 올랐어; 🤬`
         : diff < 0
           ? `${name}! 너, ${-diff}점 감면! 🎉`
           : `${name}! 너, ${score}점 그대로인데? 🙄`;
+
+    const body = reason ? `${baseBody}\n사유: ${reason}` : baseBody;
 
     // notification 필드를 쓰면 브라우저가 자동으로 한 번 띄우고, 서비스 워커의
     // onBackgroundMessage가 또 띄워서 알림이 중복 발송된다. data만 보내고
