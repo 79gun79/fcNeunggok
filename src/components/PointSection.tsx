@@ -117,7 +117,7 @@ const PointSection = () => {
                 return (
                   <div
                     key={member.id}
-                    className={`relative flex items-center gap-4 rounded-2xl border p-4 transition-shadow sm:p-5 ${
+                    className={`relative flex items-center gap-2 rounded-2xl border p-3 transition-shadow sm:gap-4 sm:p-5 ${
                       isTop
                         ? 'border-red-300 bg-red-50/60 shadow-[0_16px_40px_-20px_rgba(220,38,38,0.45)] ring-1 ring-red-200 hover:shadow-[0_20px_44px_-18px_rgba(220,38,38,0.5)]'
                         : isBottom
@@ -136,7 +136,7 @@ const PointSection = () => {
                       </span>
                     )}
                     <span
-                      className={`flex w-8 shrink-0 items-center justify-center text-lg font-bold ${
+                      className={`flex w-5 shrink-0 items-center justify-center text-sm font-bold sm:w-8 sm:text-lg ${
                         isTop
                           ? 'text-red-500'
                           : isBottom
@@ -151,24 +151,24 @@ const PointSection = () => {
                       <img
                         src={member.image}
                         alt={member.name}
-                        className="h-14 w-14 shrink-0 rounded-full object-cover"
+                        className="h-10 w-10 shrink-0 rounded-full object-cover sm:h-14 sm:w-14"
                       />
                     ) : (
                       <div
-                        className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${member.color} text-lg font-bold text-white`}
+                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${member.color} text-sm font-bold text-white sm:h-14 sm:w-14 sm:text-lg`}
                       >
                         {member.name.slice(0, 1)}
                       </div>
                     )}
 
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-base font-semibold text-slate-950">
+                      <p className="truncate text-sm font-semibold text-slate-950 sm:text-base">
                         {member.name}
                       </p>
                     </div>
 
                     <div
-                      className={`flex items-center gap-1 rounded-xl border px-3 py-2 ${
+                      className={`flex items-center gap-1 rounded-xl border px-2 py-1 sm:px-3 sm:py-2 ${
                         isTop
                           ? 'border-red-200 bg-red-100/70'
                           : isBottom
@@ -176,12 +176,14 @@ const PointSection = () => {
                             : 'border-slate-200 bg-white/70'
                       }`}
                     >
-                      {isTop && <Trophy className="h-4 w-4 text-red-500" />}
+                      {isTop && (
+                        <Trophy className="h-3.5 w-3.5 text-red-500 sm:h-4 sm:w-4" />
+                      )}
                       {isBottom && (
-                        <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                        <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 sm:h-4 sm:w-4" />
                       )}
                       <span
-                        className={`text-sm font-semibold ${
+                        className={`text-xs font-semibold sm:text-sm ${
                           isTop
                             ? 'text-red-600'
                             : isBottom
@@ -198,11 +200,11 @@ const PointSection = () => {
                         type="button"
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8 shrink-0 border-slate-200 bg-white"
+                        className="h-7 w-7 shrink-0 border-slate-200 bg-white sm:h-8 sm:w-8"
                         onClick={() => openEdit(member)}
                         aria-label={`${member.name} 점수 수정`}
                       >
-                        <SquarePen className="h-3.5 w-3.5" />
+                        <SquarePen className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       </Button>
                     )}
                   </div>

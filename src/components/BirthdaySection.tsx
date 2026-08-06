@@ -55,6 +55,7 @@ const members: Member[] = [
     name: '장준혁',
     birthDate: '2000-10-16',
     color: 'from-lime-500 to-green-600',
+    image: '/profile/junhyeok.png',
   },
   {
     id: 'moon-jeyeong',
