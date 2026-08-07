@@ -36,8 +36,14 @@ const PointSection = () => {
   const [draftReason, setDraftReason] = useState('');
 
   const scoreMutation = useMutation({
-    mutationFn: ({ id, score }: { id: string; score: number; reason: string }) =>
-      updatePointScore(id, score),
+    mutationFn: ({
+      id,
+      score,
+    }: {
+      id: string;
+      score: number;
+      reason: string;
+    }) => updatePointScore(id, score),
     onSuccess: (result, variables) => {
       if (!result.success) {
         sonnerToast.error(result.error ?? '점수 수정에 실패했습니다.');
@@ -112,8 +118,9 @@ const PointSection = () => {
               {sortedMembers.map((member, index) => {
                 const rank = index + 1;
                 const isTop = rank === 1;
-                const isBottom =
-                  rank === sortedMembers.length && sortedMembers.length > 1;
+                const isBottom = member.score <= 1500;
+                const isRampage = member.score >= 3000;
+                const isNegative = member.score < 0;
                 return (
                   <div
                     key={member.id}
@@ -125,16 +132,28 @@ const PointSection = () => {
                           : 'border-slate-200 bg-white/70 hover:shadow-[0_16px_40px_-24px_rgba(15,23,42,0.25)]'
                     }`}
                   >
-                    {isTop && (
-                      <span className="absolute -top-2.5 left-4 flex items-center gap-1 rounded-full bg-red-500 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
-                        위험
-                      </span>
-                    )}
-                    {isBottom && (
-                      <span className="absolute -top-2.5 left-4 flex items-center gap-1 rounded-full bg-emerald-500 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
-                        관리자 유력
-                      </span>
-                    )}
+                    <div className="absolute -top-2.5 left-4 flex items-center gap-1">
+                      {isTop && (
+                        <span className="rounded-full bg-red-500 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
+                          ⚠️ 천안 갈까?
+                        </span>
+                      )}
+                      {isBottom && (
+                        <span className="rounded-full bg-emerald-500 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
+                          👍🏻 충성
+                        </span>
+                      )}
+                      {isRampage && (
+                        <span className="rounded-full bg-red-800 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
+                          🔥 폭주
+                        </span>
+                      )}
+                      {isNegative && (
+                        <span className="rounded-full bg-blue-700 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
+                          👤 관리자
+                        </span>
+                      )}
+                    </div>
                     <span
                       className={`flex w-5 shrink-0 items-center justify-center text-sm font-bold sm:w-8 sm:text-lg ${
                         isTop
