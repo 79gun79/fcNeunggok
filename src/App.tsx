@@ -5,12 +5,14 @@ import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import ScrollToTop from '@/components/ScrollToTop';
+import ChatFab from '@/components/ChatFab';
 import { ensureFcmServiceWorkerUpToDate } from '@/lib/messaging';
 import Index from './pages/Index';
 import Gallery from './pages/Gallery';
 import Community from './pages/Community';
 import Birthday from './pages/Birthday';
 import Point from './pages/Point';
+import Chat from './pages/Chat';
 
 const queryClient = new QueryClient();
 
@@ -26,12 +28,14 @@ const App = () => {
           <BrowserRouter>
             <ScrollToTop />
             <SonnerToaster />
+            <ChatFab />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/gallery" element={<Gallery />} />
               <Route path="/community" element={<Community />} />
               <Route path="/birthday" element={<Birthday />} />
               <Route path="/point" element={<Point />} />
+              <Route path="/chat" element={<Chat />} />
               <Route path="*" element={<Index />} />
             </Routes>
           </BrowserRouter>

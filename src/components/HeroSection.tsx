@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { User2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import EventBanner from '@/components/EventBanner';
+import ChatEntryBanner from '@/components/ChatEntryBanner';
 
 const BANNER_SLIDES = [
   { type: 'event' as const },
@@ -13,7 +14,7 @@ const BANNER_SLIDES = [
   { type: 'image' as const, src: '/banner5.jpeg' },
 ];
 
-const BANNER_INTERVAL_MS = 4500;
+const BANNER_INTERVAL_MS = 10000; // 10 seconds
 
 const HeroSection = () => {
   const [[bannerIndex, direction], setBannerState] = useState([0, 0]);
@@ -86,7 +87,7 @@ const HeroSection = () => {
       <div className="pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(circle_at_top,rgba(96,165,250,0.18),transparent_30%),radial-gradient(circle_at_80%_18%,rgba(255,255,255,0.12),transparent_24%),radial-gradient(circle_at_bottom,rgba(120,53,15,0.14),transparent_34%)]" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 bg-[linear-gradient(180deg,transparent,rgba(0,0,0,0.35))] sm:h-52" />
 
-      <div className="pointer-events-none container relative z-20 mx-auto flex min-h-[calc(100vh-3.5rem)] flex-col sm:min-h-[calc(100vh-4rem)]">
+      <div className="container pointer-events-none relative z-20 mx-auto flex min-h-[calc(100vh-3.5rem)] flex-col sm:min-h-[calc(100vh-4rem)]">
         {isEventSlide ? (
           <div className="flex flex-col items-center gap-3 pt-36 text-center sm:pt-44">
             <motion.div
@@ -137,6 +138,8 @@ const HeroSection = () => {
             >
               FC 능곡의 공식 커뮤니티에 오신 것을 환영합니다.
             </motion.p>
+
+            <ChatEntryBanner />
           </div>
         )}
 
