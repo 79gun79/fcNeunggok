@@ -42,6 +42,14 @@ const waitForActivation = (registration: ServiceWorkerRegistration) =>
     });
   });
 
+// iOS Safari는 홈 화면에 추가된 PWA(standalone)가 아니면 웹 푸시 권한 요청 자체가
+// 브라우저 레벨에서 막혀 있어, 토큰 발급을 시도하기 전에 미리 안내가 필요하다.
+export const isIosNonStandalonePwa = (): boolean => {
+  const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+  return isIos && !isStandalone;
+};
+
 export const requestFcmToken = async (): Promise<string | null> => {
   if (!('Notification' in window) || !('serviceWorker' in navigator)) {
     console.warn('이 브라우저는 푸시 알림을 지원하지 않습니다.');

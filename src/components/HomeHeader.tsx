@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { requestFcmToken } from '@/lib/messaging';
+import { isIosNonStandalonePwa, requestFcmToken } from '@/lib/messaging';
 import { saveFcmToken } from '@/api/fcmTokens';
 
 const navItems = [
@@ -38,6 +38,12 @@ const HomeHeader = () => {
   const handleEnableNotifications = async () => {
     if (isRequestingNotification || notificationPermission === 'denied')
       return;
+    if (isIosNonStandalonePwa()) {
+      sonnerToast.error(
+        'iOS에서는 홈 화면에 추가한 후에만 알림을 받을 수 있어요. 공유 버튼에서 "홈 화면에 추가"를 눌러주세요.',
+      );
+      return;
+    }
     setIsRequestingNotification(true);
     try {
       const token = await requestFcmToken();

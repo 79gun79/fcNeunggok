@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import admin from 'npm:firebase-admin@12';
+import { cleanupInvalidFcmTokens } from '../_shared/cleanupFcmTokens.ts';
 
 const ADMIN_EMAILS = ['79gun79@gmail.com', 'neunggok123@gmail.com'];
 
@@ -91,6 +92,8 @@ Deno.serve(async (req) => {
         body,
       },
     });
+
+    await cleanupInvalidFcmTokens(supabase, tokens, response);
 
     return new Response(
       JSON.stringify({

@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import admin from 'npm:firebase-admin@12';
+import { cleanupInvalidFcmTokens } from '../_shared/cleanupFcmTokens.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -121,6 +122,8 @@ Deno.serve(async (req) => {
         body: `${comment.author}님이 "${post.title}"에 댓글을 남겼어요: ${comment.content}`,
       },
     });
+
+    await cleanupInvalidFcmTokens(supabase, tokens, response);
 
     return new Response(
       JSON.stringify({

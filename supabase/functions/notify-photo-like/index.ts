@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import admin from 'npm:firebase-admin@12';
+import { cleanupInvalidFcmTokens } from '../_shared/cleanupFcmTokens.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -108,6 +109,8 @@ Deno.serve(async (req) => {
         body: `${likerName}님이 회원님의 사진을 흥모띠! 🙄`,
       },
     });
+
+    await cleanupInvalidFcmTokens(supabase, tokens, response);
 
     return new Response(
       JSON.stringify({
