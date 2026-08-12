@@ -16,6 +16,12 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -403,9 +409,7 @@ const GallerySection = () => {
                   <div
                     key={photo.id}
                     className={`group relative aspect-[0.92] cursor-pointer overflow-hidden rounded-[1.35rem] border border-white/[0.12] bg-white/[0.06] shadow-[0_18px_40px_-20px_rgba(0,0,0,0.45)] transition-all duration-500 sm:aspect-[0.95] sm:rounded-[1.75rem] ${
-                      isVisible
-                        ? 'scale-100 opacity-100'
-                        : 'scale-95 opacity-0'
+                      isVisible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
                     }`}
                     style={{ transitionDelay: `${300 + index * 100}ms` }}
                     onClick={() => handlePhotoClick(photo)}
@@ -452,14 +456,14 @@ const GallerySection = () => {
                 );
               })}
 
-              <Dialog
-                open={isPhotoModalOpen}
-                onOpenChange={setIsPhotoModalOpen}
-              >
-                <DialogContent className="max-w-[calc(100vw-1rem)] rounded-[1.25rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(2,6,23,0.94))] !text-white shadow-2xl backdrop-blur-2xl sm:max-w-xl sm:rounded-[1.75rem]">
-                  <DialogHeader>
-                    <DialogTitle>사진 상세</DialogTitle>
-                  </DialogHeader>
+              <Sheet open={isPhotoModalOpen} onOpenChange={setIsPhotoModalOpen}>
+                <SheetContent
+                  side="bottom"
+                  className="flex max-h-[90vh] flex-col overflow-y-auto rounded-t-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(2,6,23,0.94))] !text-white shadow-2xl backdrop-blur-2xl sm:mx-auto sm:max-w-xl"
+                >
+                  <SheetHeader>
+                    <SheetTitle className="!text-white">사진 상세</SheetTitle>
+                  </SheetHeader>
                   {selectedPhoto && (
                     <div className="flex flex-col items-center space-y-4">
                       <div className="flex w-full justify-center overflow-hidden rounded-[1rem] bg-white/[0.06] sm:rounded-2xl">
@@ -544,8 +548,8 @@ const GallerySection = () => {
                       </div>
                     </div>
                   )}
-                </DialogContent>
-              </Dialog>
+                </SheetContent>
+              </Sheet>
 
               <AlertDialog
                 open={isDeleteDialogOpen}

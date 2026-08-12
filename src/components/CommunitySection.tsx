@@ -33,13 +33,13 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -464,13 +464,16 @@ export default function CommunitySection() {
         </div>
       </div>
 
-      <Dialog open={isEditorOpen} onOpenChange={setIsEditorOpen}>
-        <DialogContent className="sm:max-w-xl">
-          <DialogHeader>
-            <DialogTitle className="mb-2 text-left">
+      <Sheet open={isEditorOpen} onOpenChange={setIsEditorOpen}>
+        <SheetContent
+          side="bottom"
+          className="flex max-h-[90vh] flex-col overflow-y-auto rounded-t-2xl sm:mx-auto sm:max-w-xl"
+        >
+          <SheetHeader>
+            <SheetTitle className="mb-2 text-left">
               {editingPostId ? '게시글 수정' : '새 게시글 작성'}
-            </DialogTitle>
-            <DialogDescription className="flex items-center gap-1.5">
+            </SheetTitle>
+            <SheetDescription className="flex items-center gap-1.5">
               {user && (
                 <>
                   <AuthorAvatar
@@ -480,8 +483,8 @@ export default function CommunitySection() {
                   {getBestDisplayName(user)}
                 </>
               )}
-            </DialogDescription>
-          </DialogHeader>
+            </SheetDescription>
+          </SheetHeader>
 
           <div className="grid gap-4">
             <div className="grid gap-2">
@@ -513,18 +516,18 @@ export default function CommunitySection() {
             </div>
           </div>
 
-          <DialogFooter>
+          <SheetFooter>
             <Button type="button" variant="outline" onClick={closeEditor}>
               취소
             </Button>
             <Button type="button" onClick={submitDraft} disabled={isSubmitting}>
               {editingPostId ? '수정 저장' : '작성'}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
-      <Dialog
+      <Sheet
         open={Boolean(selectedPostId)}
         onOpenChange={(open) => {
           setSelectedPostId(open ? selectedPostId : null);
@@ -533,14 +536,17 @@ export default function CommunitySection() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-2xl">
+        <SheetContent
+          side="bottom"
+          className="flex max-h-[90vh] flex-col overflow-y-auto rounded-t-2xl sm:mx-auto sm:max-w-2xl"
+        >
           {selectedPost ? (
             <>
-              <DialogHeader>
-                <DialogTitle className="mb-2 text-left">
+              <SheetHeader>
+                <SheetTitle className="mb-2 text-left">
                   {selectedPost.title}
-                </DialogTitle>
-                <DialogDescription className="flex flex-wrap items-center gap-1.5 text-left">
+                </SheetTitle>
+                <SheetDescription className="flex flex-wrap items-center gap-1.5 text-left">
                   <AuthorAvatar
                     author={selectedPost.author}
                     avatarUrl={selectedPost.avatar_url}
@@ -548,8 +554,8 @@ export default function CommunitySection() {
                   {selectedPost.author}
                   {' \b · \b '}
                   {formatDateTime(selectedPost.updated_at)} 수정
-                </DialogDescription>
-              </DialogHeader>
+                </SheetDescription>
+              </SheetHeader>
               <div className="whitespace-pre-wrap rounded-lg border border-slate-200 bg-white/60 p-4 text-sm leading-6 text-slate-700">
                 {selectedPost.description}
               </div>
@@ -626,7 +632,7 @@ export default function CommunitySection() {
               </div>
 
               {user?.id === selectedPost.user_id && (
-                <DialogFooter>
+                <SheetFooter>
                   <Button
                     type="button"
                     variant="outline"
@@ -646,7 +652,7 @@ export default function CommunitySection() {
                     <Trash2 className="mr-2 h-4 w-4" />
                     삭제
                   </Button>
-                </DialogFooter>
+                </SheetFooter>
               )}
             </>
           ) : (
@@ -656,14 +662,14 @@ export default function CommunitySection() {
               </p>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       <AlertDialog
         open={Boolean(deleteTargetId)}
         onOpenChange={(open) => setDeleteTargetId(open ? deleteTargetId : null)}
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100vw-1rem)] rounded-[1.25rem] sm:max-w-lg sm:rounded-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle>게시글을 삭제할까요?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -688,7 +694,7 @@ export default function CommunitySection() {
           setDeleteCommentTargetId(open ? deleteCommentTargetId : null)
         }
       >
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100vw-1rem)] rounded-[1.25rem] sm:max-w-lg sm:rounded-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle>댓글을 삭제할까요?</AlertDialogTitle>
             <AlertDialogDescription>

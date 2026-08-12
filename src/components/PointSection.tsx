@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ShieldCheck, SquarePen, Trophy } from 'lucide-react';
+import { Minus, Plus, ShieldCheck, SquarePen, Trophy } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast as sonnerToast } from 'sonner';
 import { fetchPoints, updatePointScore } from '@/api/points';
@@ -18,13 +18,17 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { SUPERADMIN_EMAILS, ADMIN_EMAILS } from '@/config/admins';
 
-const ADMIN_EMAILS = ['79gun79@gmail.com', 'neunggok123@gmail.com'];
+const ADMIN_ADJUSTMENT_STEP = 50;
+const ADMIN_MAX_ADJUSTMENT = 200;
 
 const PointSection = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const isAdmin = !!user?.email && ADMIN_EMAILS.includes(user.email);
+  const isSuperAdmin = !!user?.email && SUPERADMIN_EMAILS.includes(user.email);
+  const isAdmin =
+    isSuperAdmin || (!!user?.email && ADMIN_EMAILS.includes(user.email));
 
   const { data: points = [], isLoading } = useQuery({
     queryKey: ['points'],
@@ -33,6 +37,7 @@ const PointSection = () => {
 
   const [editingMember, setEditingMember] = useState<Point | null>(null);
   const [draftScore, setDraftScore] = useState('');
+  const [scoreAdjustment, setScoreAdjustment] = useState(0);
   const [draftReason, setDraftReason] = useState('');
 
   const scoreMutation = useMutation({
@@ -69,19 +74,30 @@ const PointSection = () => {
   const openEdit = (member: Point) => {
     setEditingMember(member);
     setDraftScore(String(member.score));
+    setScoreAdjustment(0);
     setDraftReason('');
   };
 
   const submitScore = () => {
     if (!editingMember) return;
-    const score = Number(draftScore);
-    if (!Number.isInteger(score)) {
-      sonnerToast.info('점수는 정수로 입력해 주세요.');
+
+    if (isSuperAdmin) {
+      const score = Number(draftScore);
+      if (!Number.isInteger(score)) {
+        sonnerToast.info('점수는 정수로 입력해 주세요.');
+        return;
+      }
+      scoreMutation.mutate({
+        id: editingMember.id,
+        score,
+        reason: draftReason.trim(),
+      });
       return;
     }
+
     scoreMutation.mutate({
       id: editingMember.id,
-      score,
+      score: editingMember.score + scoreAdjustment,
       reason: draftReason.trim(),
     });
   };
@@ -247,16 +263,68 @@ const PointSection = () => {
           </SheetHeader>
 
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="point-score">점수</Label>
-              <Input
-                id="point-score"
-                type="number"
-                inputMode="numeric"
-                value={draftScore}
-                onChange={(e) => setDraftScore(e.target.value)}
-              />
-            </div>
+            {isSuperAdmin ? (
+              <div className="grid gap-2">
+                <Label htmlFor="point-score">점수</Label>
+                <Input
+                  id="point-score"
+                  type="number"
+                  inputMode="numeric"
+                  value={draftScore}
+                  onChange={(e) => setDraftScore(e.target.value)}
+                />
+              </div>
+            ) : (
+              <div className="grid gap-2">
+                <Label>점수 조정</Label>
+                <div className="flex items-center justify-center gap-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() =>
+                      setScoreAdjustment((prev) =>
+                        Math.max(
+                          prev - ADMIN_ADJUSTMENT_STEP,
+                          -ADMIN_MAX_ADJUSTMENT,
+                        ),
+                      )
+                    }
+                    disabled={scoreAdjustment <= -ADMIN_MAX_ADJUSTMENT}
+                    aria-label="점수 50점 감소"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </Button>
+                  <div className="min-w-24 text-center">
+                    <p className="text-2xl font-bold text-slate-950">
+                      {(editingMember?.score ?? 0) + scoreAdjustment}점
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {scoreAdjustment > 0
+                        ? `+${scoreAdjustment}`
+                        : scoreAdjustment}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() =>
+                      setScoreAdjustment((prev) =>
+                        Math.min(
+                          prev + ADMIN_ADJUSTMENT_STEP,
+                          ADMIN_MAX_ADJUSTMENT,
+                        ),
+                      )
+                    }
+                    disabled={scoreAdjustment >= ADMIN_MAX_ADJUSTMENT}
+                    aria-label="점수 50점 증가"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
             <div className="grid gap-2">
               <Label htmlFor="point-reason">이유</Label>
               <Textarea
