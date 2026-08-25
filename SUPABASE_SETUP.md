@@ -254,13 +254,28 @@ CREATE POLICY "Points are viewable by everyone"
   USING (true);
 
 -- 점수 수정은 지정된 관리자 이메일만 허용
-CREATE POLICY "Only the admin can update points"
+CREATE POLICY "Admins can update points"
   ON points FOR UPDATE
-  USING (auth.jwt() ->> 'email' = '79gun79@gmail.com')
-  WITH CHECK (auth.jwt() ->> 'email' = '79gun79@gmail.com');
+  USING (auth.jwt() ->> 'email' IN ('79gun79@gmail.com', 'neunggok123@gmail.com', 'wpdud258@gmail.com'))
+  WITH CHECK (auth.jwt() ->> 'email' IN ('79gun79@gmail.com', 'neunggok123@gmail.com', 'wpdud258@gmail.com'));
 ```
 
-앱에서는 `79gun79@gmail.com` 계정으로 구글 로그인했을 때만 Point 페이지에 점수 +/- 버튼이 표시됩니다. 실제 권한은 위 RLS 정책이 서버 단에서 강제하므로, 다른 계정으로는 API를 직접 호출해도 수정되지 않습니다. 관리자를 추가하거나 바꾸려면 이 정책의 이메일 조건을 수정하세요.
+앱에서는 `src/config/admins.ts`의 `ALL_ADMIN_EMAILS`에 포함된 계정으로 구글 로그인했을 때만 Point 페이지에 점수 +/- 버튼이 표시됩니다. 실제 권한은 위 RLS 정책이 서버 단에서 강제하므로, 다른 계정으로는 API를 직접 호출해도 수정되지 않습니다.
+
+**중요**: `admins.ts`에 이메일을 추가/제거하는 것만으로는 실제 DB 쓰기 권한이 바뀌지 않습니다. `admins.ts`는 UI에 버튼을 보여줄지만 결정하고, 실제 권한은 Supabase의 RLS 정책이 결정하기 때문입니다. 관리자를 추가하거나 바꿀 때는 다음 두 곳을 함께 수정해야 합니다.
+
+1. `src/config/admins.ts`의 `SUPERADMIN_EMAILS` / `ADMIN_EMAILS`
+2. Supabase 대시보드 SQL Editor에서 아래 SQL을 실행해 `points` 테이블 RLS 정책의 이메일 목록을 동일하게 갱신:
+
+```sql
+DROP POLICY IF EXISTS "Only the admin can update points" ON points;
+DROP POLICY IF EXISTS "Admins can update points" ON points;
+
+CREATE POLICY "Admins can update points"
+  ON points FOR UPDATE
+  USING (auth.jwt() ->> 'email' IN ('79gun79@gmail.com', 'neunggok123@gmail.com', 'wpdud258@gmail.com'))
+  WITH CHECK (auth.jwt() ->> 'email' IN ('79gun79@gmail.com', 'neunggok123@gmail.com', 'wpdud258@gmail.com'));
+```
 
 ## 8. FCM 토큰(fcm_tokens) 테이블 설정
 

@@ -1,5 +1,12 @@
 import { useState } from 'react';
-import { Minus, Plus, ShieldCheck, SquarePen, Trophy } from 'lucide-react';
+import {
+  Minus,
+  Plus,
+  ShieldCheck,
+  SquarePen,
+  ThumbsDown,
+  Medal,
+} from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast as sonnerToast } from 'sonner';
 import { fetchPoints, updatePointScore } from '@/api/points';
@@ -134,47 +141,53 @@ const PointSection = () => {
               {sortedMembers.map((member, index) => {
                 const rank = index + 1;
                 const isTop = rank === 1;
-                const isBottom = member.score <= 1500;
-                const isRampage = member.score >= 3000;
-                const isNegative = member.score < 0;
+                const isCheonan = member.score >= 4000;
+                const isChungsin = member.score <= 1500;
+                const isFire = member.score >= 3000;
+                const isAdmin = member.score < 0;
                 return (
                   <div
                     key={member.id}
                     className={`relative flex items-center gap-2 rounded-2xl border p-3 transition-shadow sm:gap-4 sm:p-5 ${
-                      isTop
+                      isFire
                         ? 'border-red-300 bg-red-50/60 shadow-[0_16px_40px_-20px_rgba(220,38,38,0.45)] ring-1 ring-red-200 hover:shadow-[0_20px_44px_-18px_rgba(220,38,38,0.5)]'
-                        : isBottom
+                        : isChungsin
                           ? 'border-emerald-200 bg-emerald-50/50 hover:shadow-[0_16px_40px_-24px_rgba(16,185,129,0.3)]'
                           : 'border-slate-200 bg-white/70 hover:shadow-[0_16px_40px_-24px_rgba(15,23,42,0.25)]'
                     }`}
                   >
                     <div className="absolute -top-2.5 left-4 flex items-center gap-1">
                       {isTop && (
-                        <span className="rounded-full bg-red-500 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
-                          ⚠️ 천안 갈까?
+                        <span className="rounded-full bg-orange-600 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
+                          😱 간신
                         </span>
                       )}
-                      {isBottom && (
-                        <span className="rounded-full bg-emerald-500 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
+                      {isCheonan && (
+                        <span className="rounded-full bg-pink-700 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
+                          🤬 천안 와라
+                        </span>
+                      )}
+                      {isChungsin && (
+                        <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
                           👍🏻 충성
                         </span>
                       )}
-                      {isRampage && (
-                        <span className="rounded-full bg-red-800 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
+                      {isFire && (
+                        <span className="rounded-full bg-red-600 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
                           🔥 폭주
                         </span>
                       )}
-                      {isNegative && (
-                        <span className="rounded-full bg-blue-700 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
-                          👤 관리자
+                      {isAdmin && (
+                        <span className="rounded-full bg-violet-700 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
+                          👨🏻‍🎓 관리자
                         </span>
                       )}
                     </div>
                     <span
                       className={`flex w-5 shrink-0 items-center justify-center text-sm font-bold sm:w-8 sm:text-lg ${
-                        isTop
+                        isFire
                           ? 'text-red-500'
-                          : isBottom
+                          : isChungsin
                             ? 'text-emerald-500'
                             : 'text-slate-400'
                       }`}
@@ -204,24 +217,27 @@ const PointSection = () => {
 
                     <div
                       className={`flex items-center gap-1 rounded-xl border px-2 py-1 sm:px-3 sm:py-2 ${
-                        isTop
+                        isFire
                           ? 'border-red-200 bg-red-100/70'
-                          : isBottom
+                          : isChungsin
                             ? 'border-emerald-200 bg-emerald-100/60'
                             : 'border-slate-200 bg-white/70'
                       }`}
                     >
-                      {isTop && (
-                        <Trophy className="h-3.5 w-3.5 text-red-500 sm:h-4 sm:w-4" />
-                      )}
-                      {isBottom && (
+                      {isTop ? (
+                        <Medal className="h-3.5 w-3.5 text-red-500 sm:h-4 sm:w-4" />
+                      ) : isFire ? (
+                        <ThumbsDown className="h-3.5 w-3.5 text-red-500 sm:h-4 sm:w-4" />
+                      ) : null}
+
+                      {isChungsin && (
                         <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 sm:h-4 sm:w-4" />
                       )}
                       <span
                         className={`text-xs font-semibold sm:text-sm ${
-                          isTop
+                          isFire
                             ? 'text-red-600'
-                            : isBottom
+                            : isChungsin
                               ? 'text-emerald-600'
                               : 'text-slate-900'
                         }`}
