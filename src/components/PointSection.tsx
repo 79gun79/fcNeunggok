@@ -144,7 +144,7 @@ const PointSection = () => {
                 const isCheonan = member.score >= 4000;
                 const isChungsin = member.score <= 1500;
                 const isFire = member.score >= 3000;
-                const isAdmin = member.score < 0;
+                const isNegativeScore = member.score <= 0;
                 return (
                   <div
                     key={member.id}
@@ -177,7 +177,7 @@ const PointSection = () => {
                           🔥 폭주
                         </span>
                       )}
-                      {isAdmin && (
+                      {isNegativeScore && (
                         <span className="rounded-full bg-violet-700 px-2.5 py-0.5 text-xs font-bold text-white shadow-sm">
                           👨🏻‍🎓 관리자
                         </span>
