@@ -61,7 +61,7 @@ const AttendanceStamp = () => {
       </motion.div>
       <div className="min-w-0">
         <p
-          className={`text-sm font-bold sm:text-base ${
+          className={`mb-1 text-sm font-bold sm:text-base ${
             hasCheckedInToday ? 'text-red-600' : 'text-slate-900'
           }`}
         >
@@ -70,9 +70,15 @@ const AttendanceStamp = () => {
             : '오늘 출석하면 50점 감면이야!'}
         </p>
         <p className="text-xs text-slate-500 sm:text-sm">
-          {hasCheckedInToday
-            ? '내일 또 도장 찍으러 오세요!'
-            : '출석하는 사람이 진짜 FC 능곡 멤버죠. 가짜들 아웃!'}
+          {hasCheckedInToday ? (
+            '내일 또 도장 찍으러 오세요!'
+          ) : (
+            <>
+              출석하는 사람이 진짜 FC 능곡 멤버죠!
+              <br />
+              가짜들 다 나가라!
+            </>
+          )}
         </p>
       </div>
     </button>

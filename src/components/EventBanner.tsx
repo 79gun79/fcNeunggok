@@ -31,19 +31,21 @@ const EventBanner = () => {
             <span className="text-[#ff3b3b]">200</span>점 감면!
           </p>
 
-          <p className="mt-4 inline-flex w-fit items-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium text-white/70 sm:text-sm">
-            기존 등록된 멤버는{' '}
-            <span className="mx-1 font-bold text-[#ff3b3b]">300점 감면</span>
-            입니다.
-          </p>
+          <div className="mt-4 flex flex-col items-start gap-4">
+            <p className="inline-flex w-fit items-center rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium text-white/70 sm:text-sm">
+              기존 등록된 멤버는{' '}
+              <span className="mx-1 font-bold text-[#ff3b3b]">300점 감면</span>
+              입니다.
+            </p>
 
-          <Link
-            to="/point"
-            className="mt-8 inline-flex w-fit items-center gap-2 rounded-full bg-[#ff3b3b] px-6 py-3 text-sm font-semibold text-white shadow-[0_20px_40px_-20px_rgba(255,59,59,0.5)] transition-transform hover:scale-[1.03]"
-          >
-            출석 고고
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+            <Link
+              to="/point"
+              className="inline-flex w-fit items-center gap-2 rounded-full bg-[#ff3b3b] px-6 py-3 text-sm font-semibold text-white shadow-[0_20px_40px_-20px_rgba(255,59,59,0.5)] transition-transform hover:scale-[1.03]"
+            >
+              출석 고고
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
 
           <div className="mt-12 border-t border-white/10 pt-6">
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-white/50">
