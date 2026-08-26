@@ -29,7 +29,9 @@ export const fetchTodayAttendance = async (): Promise<boolean> => {
 
     if (!user) return false;
 
-    const today = new Date().toISOString().slice(0, 10);
+    const today = new Date().toLocaleDateString('sv-SE', {
+      timeZone: 'Asia/Seoul',
+    });
     const { data, error } = await supabase
       .from('attendance')
       .select('id')
