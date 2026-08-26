@@ -10,10 +10,10 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast as sonnerToast } from 'sonner';
 import { fetchPoints, updatePointScore } from '@/api/points';
-import { checkInAttendance, fetchTodayAttendance } from '@/api/attendance';
 import { notifyScoreChange } from '@/api/notify';
 import type { Point } from '@/types/point';
 import { useAuth } from '@/contexts/AuthContext';
+import AttendanceStamp from '@/components/AttendanceStamp';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -41,28 +41,6 @@ const PointSection = () => {
   const { data: points = [], isLoading } = useQuery({
     queryKey: ['points'],
     queryFn: fetchPoints,
-  });
-
-  const { data: hasCheckedInToday = false } = useQuery({
-    queryKey: ['attendance', 'today', user?.id],
-    queryFn: fetchTodayAttendance,
-    enabled: Boolean(user),
-  });
-
-  const checkInMutation = useMutation({
-    mutationFn: checkInAttendance,
-    onSuccess: (result) => {
-      if (!result.success) {
-        sonnerToast.error(result.error ?? '출석 체크에 실패했습니다.');
-        return;
-      }
-      queryClient.invalidateQueries({ queryKey: ['points'] });
-      queryClient.invalidateQueries({ queryKey: ['attendance', 'today'] });
-      sonnerToast.success('출석 체크 완료! 점수가 50점 감소했습니다.');
-    },
-    onError: () => {
-      sonnerToast.error('출석 체크 중 오류가 발생했습니다.');
-    },
   });
 
   const [editingMember, setEditingMember] = useState<Point | null>(null);
@@ -142,25 +120,12 @@ const PointSection = () => {
       <div className="container mx-auto px-2 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl rounded-[1.75rem] border border-slate-200 bg-white/80 p-5 shadow-[0_24px_70px_-44px_rgba(15,23,42,0.18)] backdrop-blur-md sm:p-10 lg:p-12">
           <div className="flex flex-col gap-3">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="flex flex-col gap-3">
-                <p className="text-xs font-medium tracking-[0.18em] text-slate-500">
-                  POINT
-                </p>
-                <h2 className="text-3xl font-bold text-slate-950 sm:text-4xl">
-                  FC 능곡 멤버 순위
-                </h2>
-              </div>
-              {user && (
-                <Button
-                  type="button"
-                  onClick={() => checkInMutation.mutate()}
-                  disabled={hasCheckedInToday || checkInMutation.isPending}
-                >
-                  {hasCheckedInToday ? '오늘 출석 완료' : '출석체크 (-50점)'}
-                </Button>
-              )}
-            </div>
+            <p className="text-xs font-medium tracking-[0.18em] text-slate-500">
+              POINT
+            </p>
+            <h2 className="text-3xl font-bold text-slate-950 sm:text-4xl">
+              FC 능곡 멤버 순위
+            </h2>
             <p className="max-w-2xl text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">
               멤버들의 미친 짓을 가만보고 있지 않고,
               <br />
@@ -168,12 +133,14 @@ const PointSection = () => {
             </p>
           </div>
 
+          <div className="mt-8 sm:mt-10">
+            <AttendanceStamp />
+          </div>
+
           {isLoading ? (
-            <p className="mt-8 text-sm text-slate-500 sm:mt-10">
-              불러오는 중...
-            </p>
+            <p className="text-sm text-slate-500">불러오는 중...</p>
           ) : (
-            <div className="mt-8 flex flex-col gap-3 sm:mt-10">
+            <div className="flex flex-col gap-3">
               {sortedMembers.map((member, index) => {
                 const rank = index + 1;
                 const isTop = rank === 1;
