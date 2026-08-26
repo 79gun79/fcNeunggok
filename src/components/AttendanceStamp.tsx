@@ -67,12 +67,12 @@ const AttendanceStamp = () => {
         >
           {hasCheckedInToday
             ? '오늘은 이미 출석했어요 👍'
-            : '오늘 출석하면 -50점이에요'}
+            : '오늘 출석하면 50점 감면이야!'}
         </p>
         <p className="text-xs text-slate-500 sm:text-sm">
           {hasCheckedInToday
-            ? '내일 또 도장 찍으러 오세요.'
-            : '그래도 나오는 사람이 진짜 팀원이죠. 도장 찍고 가세요.'}
+            ? '내일 또 도장 찍으러 오세요!'
+            : '출석하는 사람이 진짜 FC 능곡 멤버죠. 가짜들 아웃!'}
         </p>
       </div>
     </button>
